@@ -1,0 +1,73 @@
+{
+  "name": "Inspectify - Gestión de Calidad",
+  "short_name": "Inspectify",
+  "description": "Sistema de gestión de calidad profesional para inspecciones y auditorías",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#1a2332",
+  "categories": ["productivity", "business"],
+  "screenshots": [
+    {
+      "src": "/inspectify-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/inspectify-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/inspectify-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/inspectify-icon-192.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/inspectify-icon-512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/inspectify-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/inspectify-icon-192.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/inspectify-icon-512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Inspección Rápida",
+      "short_name": "Inspección",
+      "description": "Iniciar una inspección rápida",
+      "url": "/inspeccion-rapida",
+      "icons": [{ "src": "/inspectify-logo.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}
