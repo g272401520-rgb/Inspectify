@@ -656,6 +656,6 @@ export default function ComparativasPage() {
           </div>
         )}
       </main>
-    </div>
+    </>
   )
 }

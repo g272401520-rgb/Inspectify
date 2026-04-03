@@ -375,6 +375,6 @@ export default function ConsolidadoPage() {
           )}
         </div>
       </main>
-    </div>
+    </>
   )
 }

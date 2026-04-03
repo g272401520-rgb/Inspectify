@@ -941,6 +941,6 @@ export default function SeguimientoPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }
