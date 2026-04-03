@@ -955,17 +955,35 @@ export async function getInspectionsWithFindings(): Promise<Inspection[]> {
   }
 
   const findingIds = findingsData?.map((f) => f.id) || []
+  
+  logger.log(`[v0] Found ${inspectionIds.length} inspections, ${findingIds.length} findings`)
 
   // Fetch all photos for these findings
   let photosData: any[] = []
-  if (findingIds.length > 0) {
-    const { data, error: photosError } = await supabase.from("finding_photos").select("*").in("finding_id", findingIds)
+  if (findingIds.length > 0 && Array.isArray(findingIds)) {
+    try {
+      const { data, error: photosError } = await supabase
+        .from("finding_photos")
+        .select("*")
+        .in("finding_id", findingIds)
 
-    if (photosError) {
-      logger.error("Error fetching photos:", photosError.message || photosError)
-    } else {
-      photosData = data || []
+      if (photosError) {
+        logger.error(
+          "[v0] Error fetching photos:",
+          `${photosError.message || photosError} (findingIds: ${findingIds.length} items)`,
+        )
+      } else {
+        photosData = data || []
+        logger.log(`[v0] Fetched ${photosData.length} photos`)
+      }
+    } catch (photoError: any) {
+      logger.error(
+        "[v0] Exception fetching photos:",
+        `${photoError.message || photoError} (findingIds count: ${findingIds.length})`,
+      )
     }
+  } else {
+    logger.log("[v0] No findings to fetch photos for")
   }
 
   // Group photos by finding_id

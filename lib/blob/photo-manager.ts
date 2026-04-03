@@ -98,18 +98,28 @@ export async function deleteFindingPhotos(findingId: string, photoUrls: string[]
  * @returns Array de URLs de fotos
  */
 export async function getFindingPhotos(findingId: string): Promise<string[]> {
+  if (!findingId || typeof findingId !== "string") {
+    console.warn("[v0] Invalid findingId provided to getFindingPhotos:", findingId)
+    return []
+  }
+
   try {
     const supabase = createClient()
-    const { data, error } = await supabase.from("finding_photos").select("photo_url").eq("finding_id", findingId)
+    const { data, error } = await supabase
+      .from("finding_photos")
+      .select("photo_url")
+      .eq("finding_id", findingId)
 
     if (error) {
-      console.error("[v0] Error obteniendo fotos:", error)
+      console.error("[v0] Error obteniendo fotos:", `${error.message || error} (findingId: ${findingId})`)
       return []
     }
 
-    return data?.map((p) => p.photo_url) || []
+    const urls = data?.map((p) => p.photo_url) || []
+    console.log(`[v0] getFindingPhotos: Retrieved ${urls.length} photos for finding ${findingId}`)
+    return urls
   } catch (error) {
-    console.error("[v0] Error fetching finding photos:", error)
+    console.error("[v0] Error fetching finding photos:", error instanceof Error ? error.message : String(error))
     return []
   }
 }
@@ -124,6 +134,11 @@ export async function getFindingPhotosByType(
   findingId: string,
   photoType: "evidence" | "solution" | "before" | "after",
 ): Promise<string[]> {
+  if (!findingId || typeof findingId !== "string") {
+    console.warn("[v0] Invalid findingId provided to getFindingPhotosByType:", findingId)
+    return []
+  }
+
   try {
     const supabase = createClient()
     const { data, error } = await supabase
@@ -133,9 +148,24 @@ export async function getFindingPhotosByType(
       .eq("photo_type", photoType)
 
     if (error) {
-      console.error("[v0] Error obteniendo fotos por tipo:", error)
+      console.error(
+        "[v0] Error fetching photos by type:",
+        `${error.message || error} (findingId: ${findingId}, type: ${photoType})`,
+      )
       return []
     }
+
+    const urls = data?.map((p) => p.photo_url) || []
+    console.log(`[v0] getFindingPhotosByType: Retrieved ${urls.length} ${photoType} photos for finding ${findingId}`)
+    return urls
+  } catch (error) {
+    console.error(
+      "[v0] Error fetching photos by type:",
+      error instanceof Error ? error.message : String(error),
+    )
+    return []
+  }
+}
 
     return data?.map((p) => p.photo_url) || []
   } catch (error) {
