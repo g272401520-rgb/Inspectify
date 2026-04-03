@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { BarChart3, FileText, TrendingUp, CheckSquare, Settings, ArrowLeft, Menu, X } from "lucide-react"
+import { BarChart3, FileText, TrendingUp, CheckSquare, Settings, ArrowLeft, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 
@@ -35,7 +35,7 @@ export function SidebarNav() {
           variant="outline"
           className="bg-[#1A2440] border-[#2D8A3C] text-[#2D8A3C] hover:bg-[#1A2440]/80"
         >
-          {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {isOpen ? <Menu className="w-5 h-5 rotate-90" /> : <Menu className="w-5 h-5" />}
         </Button>
       </div>
 
@@ -54,19 +54,11 @@ export function SidebarNav() {
         }`}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between h-20 border-b border-gray-700 px-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#2D8A3C] flex items-center justify-center">
-              <span className="text-xs font-bold text-white">IN</span>
-            </div>
-            <span className="font-bold text-sm">Inspectify</span>
+        <div className="flex items-center gap-2 h-20 border-b border-gray-700 px-4">
+          <div className="w-8 h-8 rounded-lg bg-[#2D8A3C] flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-bold text-white">IN</span>
           </div>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="lg:hidden text-gray-400 hover:text-white transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <span className="font-bold text-sm">Inspectify</span>
         </div>
 
         {/* Navigation Items */}
