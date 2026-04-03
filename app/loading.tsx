@@ -10,7 +10,7 @@ export default function Loading() {
           alt="Inspectify"
           width={512}
           height={512}
-          className="w-[100rem] h-[100rem] object-contain"
+          className="w-[50rem] h-[50rem] object-contain"
           priority
         />
 
