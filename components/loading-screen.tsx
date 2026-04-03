@@ -8,16 +8,18 @@ export function LoadingScreen({ message = "Cargando..." }: LoadingScreenProps) {
   return (
     <div className="min-h-screen bg-[#054078] flex items-center justify-center p-4">
       <div className="text-center">
-        {/* Logo */}
+        {/* Logo - 192px (12rem) */}
         <div className="mb-8 flex justify-center">
-          <Image
-            src="/inspectify-logo.png"
-            alt="Inspectify"
-            width={512}
-            height={512}
-            className="w-48 h-48 object-contain"
-            priority
-          />
+          <div style={{ width: "192px", height: "192px" }}>
+            <Image
+              src="/inspectify-logo.png"
+              alt="Inspectify"
+              width={192}
+              height={192}
+              priority
+              className="w-full h-full object-contain"
+            />
+          </div>
         </div>
 
         {/* Loading text */}

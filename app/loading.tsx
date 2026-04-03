@@ -4,15 +4,17 @@ export default function Loading() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#054078]">
       <div className="flex flex-col items-center gap-8">
-        {/* Logo */}
-        <Image
-          src="/inspectify-logo.png"
-          alt="Inspectify"
-          width={512}
-          height={512}
-          className="w-48 h-48 object-contain"
-          priority
-        />
+        {/* Logo - 192px (12rem) */}
+        <div style={{ width: "192px", height: "192px" }}>
+          <Image
+            src="/inspectify-logo.png"
+            alt="Inspectify"
+            width={192}
+            height={192}
+            priority
+            className="w-full h-full object-contain"
+          />
+        </div>
 
         {/* Loading text */}
         <p className="text-2xl md:text-3xl text-white font-medium">Cargando...</p>
