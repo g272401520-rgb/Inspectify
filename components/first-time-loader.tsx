@@ -17,10 +17,11 @@ export function FirstTimeLoader({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
         setIsFirstTime(false)
       } else {
+        // Show loading screen for 1.5 seconds (matches animation)
         const timer = setTimeout(() => {
           setIsLoading(false)
           sessionStorage.setItem("hasVisitedApp", "true")
-        }, 3000)
+        }, 1500)
 
         return () => clearTimeout(timer)
       }
