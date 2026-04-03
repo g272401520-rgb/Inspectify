@@ -30,7 +30,6 @@ import type { Finding } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { downloadPhotoToDevice, generatePhotoFileName } from "@/lib/photo-utils"
-import { PageHeader } from "@/components/page-header"
 
 interface FindingWithContext extends Finding {
   inspectionId: string
@@ -334,14 +333,7 @@ export default function SeguimientoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader
-        variant="title"
-        backHref="/"
-        title="Seguimiento de Hallazgos"
-        subtitle="Gestiona y actualiza el estado de todos los hallazgos"
-      />
-
+    <>
       {/* Main Content */}
       <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
         {/* Stats */}

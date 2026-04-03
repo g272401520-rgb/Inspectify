@@ -24,7 +24,6 @@ import { parseExcelFile } from "@/lib/excel-parser"
 import type { ValidationError } from "@/lib/excel-parser"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
-import { PageHeader } from "@/components/page-header"
 
 export default function AreaPage() {
   const params = useParams()
@@ -231,7 +230,7 @@ export default function AreaPage() {
       setShowValidationDialog(false)
       toast({
         title: "Checklist importado",
-        description: `Se importó el checklist con ${validationResult.items.length} criterios`,
+        description: `Se import�� el checklist con ${validationResult.items.length} criterios`,
       })
     } catch (error) {
       console.error("Error importing checklist:", error)
@@ -291,13 +290,10 @@ export default function AreaPage() {
   if (!area) return null
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader variant="title" title={area.name} subtitle="Gestión de Checklists" backHref="/" />
-
+    <>
       <main className="container mx-auto px-4 py-6 md:py-8 max-w-7xl">
-        <div className="mb-6 md:mb-8">
-          <div className="flex flex-col gap-4">
-            <div className="min-w-0">{/* El título y subtítulo ahora están en PageHeader */}</div>
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-col gap-4">
             {checklists.length > 0 && (
               <div className="flex justify-end">
                 <select

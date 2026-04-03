@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
-import { PageHeader } from "@/components/page-header"
 
 interface AreaGroup {
   area: Area
@@ -174,8 +173,6 @@ export default function HistorialPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader variant="title" backHref="/" title="Historial" subtitle="Revisa y gestiona todas las inspecciones" />
-
       {/* Main Content */}
       <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
         {/* Stats */}

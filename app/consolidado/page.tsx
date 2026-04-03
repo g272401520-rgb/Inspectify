@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getInspectionsWithFindingsAction, getAreasAction, getChecklistsAction } from "@/lib/actions"
 import type { Inspection, Area, Checklist } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
-import { PageHeader } from "@/components/page-header"
 import { ChartDownloadButton } from "@/components/chart-download-button"
 import {
   RadarChart,
@@ -174,9 +173,7 @@ export default function ConsolidadoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader variant="title" backHref="/" title="Consolidado" subtitle="Vista general de todas las inspecciones" />
-
+    <>
       <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
         {/* Estadísticas Generales */}
         <div className="mb-6 md:mb-8">
