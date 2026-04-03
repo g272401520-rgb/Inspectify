@@ -57,8 +57,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <FirstTimeLoader>
             <AppNavigation />
-            {/* Main content — top padding clears the fixed toggle button */}
-            <main className="pt-14">
+            <main>
               {children}
             </main>
           </FirstTimeLoader>
