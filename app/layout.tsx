@@ -57,8 +57,8 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <FirstTimeLoader>
             <AppNavigation />
-            {/* Contenido principal con padding en móvil para bottom nav */}
-            <main className="pb-16 lg:pb-0">
+            {/* Contenido principal con padding superior para el toggle button */}
+            <main className="pt-20">
               {children}
             </main>
           </FirstTimeLoader>
