@@ -6,22 +6,22 @@ interface LoadingScreenProps {
 
 export function LoadingScreen({ message = "Cargando..." }: LoadingScreenProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#e3f2fd] to-[#bbdefb] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0a3a5c] flex items-center justify-center p-4">
       <div className="text-center">
         {/* Logo */}
-        <div className="mb-12 flex justify-center">
+        <div className="mb-8 flex justify-center">
           <Image
             src="/inspectify-logo.png"
             alt="Inspectify"
             width={512}
             height={512}
-            className="w-40 h-40 md:w-48 md:h-48 object-contain"
+            className="w-[100rem] h-[100rem] object-contain"
             priority
           />
         </div>
 
         {/* Loading text */}
-        <p className="text-2xl md:text-3xl text-[#546e7a] font-medium mb-8">{message}</p>
+        <p className="text-2xl md:text-3xl text-white font-medium mb-8">{message}</p>
 
         {/* Progress bar */}
         <div className="w-64 h-2 bg-white bg-opacity-40 rounded-full overflow-hidden">
