@@ -4,7 +4,6 @@ import { Inter } from "next/font/google"
 import { FirstTimeLoader } from "@/components/first-time-loader"
 import "./globals.css"
 import { Suspense } from "react"
-import { SidebarProvider, Sidebar, SidebarContent, SidebarRail, SidebarInset } from "@/components/sidebar"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -55,24 +54,9 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${inter.variable}`}>
         <Suspense fallback={null}>
-          <FirstTimeLoader>
-            <SidebarProvider>
-              <Sidebar>
-                <SidebarContent>
-                  {/* Navigation items will be added here */}
-                </SidebarContent>
-                <SidebarRail />
-              </Sidebar>
-              <SidebarInset>
-                <main>
-                  {children}
-                </main>
-              </SidebarInset>
-            </SidebarProvider>
-          </FirstTimeLoader>
+          <FirstTimeLoader>{children}</FirstTimeLoader>
         </Suspense>
       </body>
     </html>
   )
 }
-

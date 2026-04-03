@@ -5,14 +5,17 @@ import {
   Plus,
   Edit2,
   Trash2,
+  ChevronDown,
+  FileText,
+  TrendingUp,
+  BarChart3,
+  Database,
   Zap,
+  HardDrive,
   Play,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -21,8 +24,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { saveAreaAction, deleteAreaAction } from "@/lib/actions"
 import type { Area } from "@/lib/types"
+import Link from "next/link"
+import { AppLogo } from "@/components/app-logo"
 import { useRouter } from "next/navigation"
 import { DatabaseSetupAlert } from "@/components/database-setup-alert"
 
@@ -37,6 +45,7 @@ export function AreasClient({ initialAreas }: AreasClientProps) {
   const [editingArea, setEditingArea] = useState<Area | null>(null)
   const [newAreaName, setNewAreaName] = useState("")
   const [newAreaResponsible, setNewAreaResponsible] = useState("")
+  const [showMobileNav, setShowMobileNav] = useState(false)
   const [sortBy, setSortBy] = useState<"name" | "date" | "responsible">("name")
   const [isCreating, setIsCreating] = useState(false)
   const [showDatabaseAlert, setShowDatabaseAlert] = useState(initialAreas.length === 0)
@@ -119,15 +128,116 @@ export function AreasClient({ initialAreas }: AreasClientProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Botón Inspección Rápida Flotante */}
-      <Button
-        onClick={() => router.push("/inspeccion-rapida")}
-        size="lg"
-        className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-[#2D8A3C] hover:bg-[#236b30] text-white shadow-2xl z-50 p-0 transition-colors"
-        aria-label="Inspección Rápida"
-      >
-        <Zap className="h-7 w-7" />
-      </Button>
+      <header className="border-b border-border bg-[#054078] sticky top-0 z-50 shadow-sm">
+        <div className="container mx-auto px-4 py-3 md:py-4 max-w-7xl">
+          <div className="flex items-center justify-between gap-3 md:gap-8">
+            {/* Mobile Navigation */}
+            <div className="md:hidden flex items-center min-w-0 flex-1">
+              <DropdownMenu open={showMobileNav} onOpenChange={setShowMobileNav}>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 focus:outline-none hover:opacity-90 transition-opacity bg-transparent border-none p-0 min-w-0">
+                    <div className="min-w-0 flex-1">
+                      <AppLogo />
+                    </div>
+                    <ChevronDown className="h-5 w-5 text-white flex-shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuItem asChild>
+                    <Link href="/historial" className="flex items-center cursor-pointer">
+                      <FileText className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span>Historial</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/seguimiento" className="flex items-center cursor-pointer">
+                      <TrendingUp className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span>Seguimiento</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/comparativas" className="flex items-center cursor-pointer">
+                      <BarChart3 className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span>Comparativas</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/consolidado" className="flex items-center cursor-pointer">
+                      <BarChart3 className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span>Consolidado</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Desktop Logo */}
+            <div className="hidden md:flex items-center flex-shrink-0">
+              <AppLogo />
+            </div>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-2 mx-auto">
+              <Link href="/historial">
+                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span>Historial</span>
+                </Button>
+              </Link>
+              <Link href="/seguimiento">
+                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  <span>Seguimiento</span>
+                </Button>
+              </Link>
+              <Link href="/comparativas">
+                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  <span>Comparativas</span>
+                </Button>
+              </Link>
+              <Link href="/consolidado">
+                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  <span>Consolidado</span>
+                </Button>
+              </Link>
+            </nav>
+
+            {/* Database Menu */}
+            <div className="flex-shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 md:h-10 md:w-10 p-0 text-white hover:bg-white/10"
+                  >
+                    <Database className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link href="/respaldo" className="flex items-center cursor-pointer">
+                      <HardDrive className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span>Respaldo</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <Button
+              onClick={() => router.push("/inspeccion-rapida")}
+              size="lg"
+              className="fixed bottom-6 right-6 h-16 w-16 rounded-full !bg-[#054078] hover:!bg-[#043060] text-white shadow-2xl z-50 p-0 transition-colors"
+              aria-label="Inspección Rápida"
+            >
+              <Zap className="h-7 w-7" />
+            </Button>
+          </div>
+        </div>
+      </header>
 
       <main className="container mx-auto px-4 py-6 md:py-8 max-w-7xl">
         {showDatabaseAlert && areas.length === 0 && <DatabaseSetupAlert />}
@@ -156,7 +266,7 @@ export function AreasClient({ initialAreas }: AreasClientProps) {
                 onClick={() => setShowNewAreaDialog(true)}
                 size="lg"
                 variant="outline"
-                className="w-full border border-foreground/10 hover:border-[#2D8A3C]/40 hover:bg-[#2D8A3C]/10 text-foreground shadow-sm h-11 transition-all"
+                className="w-full border border-foreground/10 hover:border-[#054078]/30 hover:bg-[#054078]/12 text-foreground shadow-sm h-11 transition-all"
               >
                 <Plus className="mr-2 h-5 w-5 flex-shrink-0 text-foreground" />
                 Nueva Área
@@ -180,7 +290,7 @@ export function AreasClient({ initialAreas }: AreasClientProps) {
                 onClick={() => setShowNewAreaDialog(true)}
                 size="lg"
                 variant="outline"
-                className="w-full max-w-xs border border-foreground/10 hover:border-[#2D8A3C]/40 hover:bg-[#2D8A3C]/10 text-foreground shadow-sm transition-all"
+                className="w-full max-w-xs border border-foreground/10 hover:border-[#054078]/30 hover:bg-[#054078]/12 text-foreground shadow-sm transition-all"
                 aria-label="Crear Primera Área"
               >
                 <Plus className="mr-2 h-5 w-5 text-foreground" />
@@ -224,8 +334,9 @@ export function AreasClient({ initialAreas }: AreasClientProps) {
                 <CardContent className="pt-0">
                   <Button
                     onClick={() => router.push(`/area/${area.id}`)}
-                    className="w-full bg-[#2D8A3C] hover:bg-[#236b30] text-white"
+                    className="w-full bg-[#054078]/65 hover:bg-[#054078]/75 text-white"
                     size="lg"
+                    variant={null}
                   >
                     <Play className="mr-2 h-4 w-4" />
                     Iniciar Inspección
@@ -284,7 +395,8 @@ export function AreasClient({ initialAreas }: AreasClientProps) {
             <Button
               onClick={handleCreateArea}
               disabled={isCreating}
-              className="bg-[#2D8A3C] hover:bg-[#236b30] text-white transition-all"
+              variant="outline"
+              className="border border-foreground/10 hover:border-[#054078]/30 hover:bg-[#054078]/12 text-foreground bg-transparent transition-all"
             >
               {isCreating ? "Creando..." : "Crear Área"}
             </Button>

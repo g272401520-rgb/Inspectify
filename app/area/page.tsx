@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Upload, FileSpreadsheet, Trash2, Edit2, Play } from "lucide-react"
+import { ArrowLeft, Plus, Upload, FileSpreadsheet, Trash2, Edit2, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getAreasAction, getChecklistsByAreaAction, saveChecklistAction, deleteChecklistAction } from "@/lib/actions"
@@ -224,17 +224,34 @@ export default function AreaPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 py-8">
-        {/* Page Title */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Header */}
+      <header className="border-b border-border bg-[#054078]">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="h-10 w-10 p-0 bg-white text-[#054078] hover:bg-white/90">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">{area.name}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <h1 className="text-2xl font-bold text-white">{area.name}</h1>
+              <p className="text-sm text-white/80">Gestión de Checklists</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-foreground">Checklists Disponibles</h2>
+              <p className="mt-2 text-muted-foreground">
                 Selecciona un checklist para iniciar una inspección o crea uno nuevo
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               <Link href={createLink("/area/nuevo-checklist", { areaId })}>
                 <Button variant="outline">
                   <Plus className="mr-2 h-4 w-4" />
