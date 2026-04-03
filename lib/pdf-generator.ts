@@ -112,6 +112,11 @@ async function loadAndOptimizeImage(photoUrl: string): Promise<{ dataUrl: string
  */
 export async function generateInspectionPDF(inspection: Inspection, area: Area, checklist: Checklist): Promise<void> {
   try {
+    // Guard clauses para validar datos requeridos
+    if (!area?.name) throw new Error("El área no tiene nombre")
+    if (!checklist?.items?.length) throw new Error("El checklist no tiene criterios")
+    if (!inspection?.inspectorName) throw new Error("Falta el nombre del inspector")
+
     console.log("[v0] generateInspectionPDF: Iniciando generación de PDF para INSPECCIÓN NORMAL...")
     const doc = new jsPDF()
     const stats = calculateInspectionStats(inspection, checklist)
@@ -183,7 +188,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       margin: { left: 15, right: 15 },
     })
 
-    yPosition = (doc as any).lastAutoTable.finalY + 15
+    yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 15
 
     // Sección 2: TABLA DE REGISTROS (solo si es registro checklist)
     if (isRegistroChecklist) {
@@ -245,7 +250,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
         },
       })
 
-      yPosition = (doc as any).lastAutoTable.finalY + 15
+      yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 15
     }
 
     if (yPosition > 210) {
@@ -393,7 +398,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
         margin: { left: 15, right: 15 },
       })
 
-      yPosition = (doc as any).lastAutoTable.finalY + 15
+      yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 15
     }
 
     if (!isRegistroChecklist && Object.keys(stats.findingsByCategory).length > 0) {
@@ -549,7 +554,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
           margin: { left: 15, right: 15 },
         })
 
-        yPosition = (doc as any).lastAutoTable.finalY + 10
+        yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 10
 
         doc.setFontSize(10)
         doc.setFont("helvetica", "bold")
@@ -684,7 +689,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
           showHead: "firstPage",
         })
 
-        yPosition = (doc as any).lastAutoTable.finalY + 8
+        yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 8
 
         doc.setFontSize(9)
         doc.setTextColor(150, 150, 150)
@@ -784,6 +789,10 @@ export async function generateQuickInspectionPDF(data: {
   hallazgos: Array<{ descripcion: string; fotos: string[] }>
   }): Promise<void> {
   try {
+    // Guard clauses para validar datos requeridos en inspección rápida
+    if (!data?.lugar) throw new Error("Falta el lugar de inspección")
+    if (!data?.inspector) throw new Error("Falta el nombre del inspector")
+
   console.log("[v0] generateQuickInspectionPDF: Generando PDF para INSPECCIÓN RÁPIDA...")
   console.log("[v0] ✓ Confirmado: PDF generado SOLO por solicitud manual del usuario")
   console.log("[v0] ✓ No hay generación automática")
@@ -852,7 +861,7 @@ export async function generateQuickInspectionPDF(data: {
       margin: { left: 15, right: 15 },
     })
 
-    yPosition = (doc as any).lastAutoTable.finalY + 15
+    yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 15
 
     if (yPosition > 210) {
       doc.addPage()
@@ -1019,7 +1028,7 @@ export async function generateQuickInspectionPDF(data: {
           showHead: "firstPage",
         })
 
-        yPosition = (doc as any).lastAutoTable.finalY + 10
+        yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 10
 
         if (hallazgo.fotos.length > 0) {
           doc.setFontSize(10)
@@ -1167,7 +1176,7 @@ export async function generateQuickInspectionPDF(data: {
           showHead: "firstPage",
         })
 
-        yPosition = (doc as any).lastAutoTable.finalY + 8
+        yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 8
 
         doc.setFontSize(9)
         doc.setTextColor(150, 150, 150)
