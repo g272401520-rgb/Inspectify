@@ -336,6 +336,12 @@ export default function SeguimientoPage() {
     <>
       {/* Main Content */}
       <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Seguimiento de Hallazgos</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Gestiona y da seguimiento a los hallazgos de tus inspecciones</p>
+        </div>
+
         {/* Stats */}
         <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-4 mb-6 md:mb-8">
           <Card>

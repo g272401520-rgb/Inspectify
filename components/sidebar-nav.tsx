@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { BarChart3, FileText, TrendingUp, CheckSquare, Settings, ArrowLeft, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
+import { AppLogo } from "@/components/app-logo"
 
 const navItems = [
   { name: "Áreas", href: "/area", icon: CheckSquare },
@@ -54,11 +55,8 @@ export function SidebarNav() {
         }`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-2 h-20 border-b border-gray-700 px-4">
-          <div className="w-8 h-8 rounded-lg bg-[#2D8A3C] flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-bold text-white">IN</span>
-          </div>
-          <span className="font-bold text-sm">Inspectify</span>
+        <div className="flex items-center h-16 border-b border-gray-700 px-4">
+          <AppLogo />
         </div>
 
         {/* Navigation Items */}

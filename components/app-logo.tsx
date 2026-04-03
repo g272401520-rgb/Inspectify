@@ -8,10 +8,10 @@ export function AppLogo({ className = "" }: { className?: string }) {
         alt="Inspectify"
         width={192}
         height={192}
-        className="h-10 md:h-12 w-auto object-contain flex-shrink-0"
+        className="h-8 w-auto object-contain flex-shrink-0"
         priority
       />
-      <span className="hidden sm:inline font-bold text-lg md:text-xl text-white">Inspectify</span>
+      <span className="font-bold text-sm text-white">Inspectify</span>
     </div>
   )
 }

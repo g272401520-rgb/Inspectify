@@ -173,8 +173,13 @@ export default function HistorialPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Main Content */}
       <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Historial</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Registro de todas las inspecciones realizadas</p>
+        </div>
+
         {/* Stats */}
         <Card className="mb-4 md:mb-8">
           <CardHeader>

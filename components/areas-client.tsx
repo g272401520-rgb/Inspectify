@@ -123,7 +123,7 @@ export function AreasClient({ initialAreas }: AreasClientProps) {
       <Button
         onClick={() => router.push("/inspeccion-rapida")}
         size="lg"
-        className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-[#84BF2C] hover:bg-[#6fa025] text-white shadow-2xl z-50 p-0 transition-colors"
+        className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-[#2D8A3C] hover:bg-[#236b30] text-white shadow-2xl z-50 p-0 transition-colors"
         aria-label="Inspección Rápida"
       >
         <Zap className="h-7 w-7" />
@@ -156,7 +156,7 @@ export function AreasClient({ initialAreas }: AreasClientProps) {
                 onClick={() => setShowNewAreaDialog(true)}
                 size="lg"
                 variant="outline"
-                className="w-full border border-foreground/10 hover:border-[#054078]/30 hover:bg-[#054078]/12 text-foreground shadow-sm h-11 transition-all"
+                className="w-full border border-foreground/10 hover:border-[#2D8A3C]/40 hover:bg-[#2D8A3C]/10 text-foreground shadow-sm h-11 transition-all"
               >
                 <Plus className="mr-2 h-5 w-5 flex-shrink-0 text-foreground" />
                 Nueva Área
@@ -180,7 +180,7 @@ export function AreasClient({ initialAreas }: AreasClientProps) {
                 onClick={() => setShowNewAreaDialog(true)}
                 size="lg"
                 variant="outline"
-                className="w-full max-w-xs border border-foreground/10 hover:border-[#054078]/30 hover:bg-[#054078]/12 text-foreground shadow-sm transition-all"
+                className="w-full max-w-xs border border-foreground/10 hover:border-[#2D8A3C]/40 hover:bg-[#2D8A3C]/10 text-foreground shadow-sm transition-all"
                 aria-label="Crear Primera Área"
               >
                 <Plus className="mr-2 h-5 w-5 text-foreground" />
@@ -224,9 +224,8 @@ export function AreasClient({ initialAreas }: AreasClientProps) {
                 <CardContent className="pt-0">
                   <Button
                     onClick={() => router.push(`/area/${area.id}`)}
-                    className="w-full bg-[#84BF2C]/65 hover:bg-[#84BF2C]/75 text-white"
+                    className="w-full bg-[#2D8A3C] hover:bg-[#236b30] text-white"
                     size="lg"
-                    variant={null}
                   >
                     <Play className="mr-2 h-4 w-4" />
                     Iniciar Inspección
@@ -285,8 +284,7 @@ export function AreasClient({ initialAreas }: AreasClientProps) {
             <Button
               onClick={handleCreateArea}
               disabled={isCreating}
-              variant="outline"
-              className="border border-foreground/10 hover:border-[#84BF2C]/30 hover:bg-[#84BF2C]/12 text-foreground bg-transparent transition-all"
+              className="bg-[#2D8A3C] hover:bg-[#236b30] text-white transition-all"
             >
               {isCreating ? "Creando..." : "Crear Área"}
             </Button>
