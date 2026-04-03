@@ -140,11 +140,33 @@ export async function deleteArea(id: string): Promise<{ success: boolean; error?
       const { data: findings } = await supabase.from("findings").select("id").in("inspection_id", inspectionIds)
       const findingIds = findings?.map((f) => f.id) || []
 
+      // Delete finding photos using chunks
       if (findingIds.length > 0) {
-        await supabase.from("finding_photos").delete().in("finding_id", findingIds)
+        const photoChunks = chunkArray(findingIds, 500)
+        await Promise.all(
+          photoChunks.map((chunk) =>
+            supabase
+              .from("finding_photos")
+              .delete()
+              .in("finding_id", chunk)
+              .catch((err) => logger.error("[v0] Error deleting photo chunk:", err.message)),
+          ),
+        )
       }
 
-      await supabase.from("findings").delete().in("inspection_id", inspectionIds)
+      // Delete findings using chunks
+      const findingChunks = chunkArray(inspectionIds, 500)
+      await Promise.all(
+        findingChunks.map((chunk) =>
+          supabase
+            .from("findings")
+            .delete()
+            .in("inspection_id", chunk)
+            .catch((err) => logger.error("[v0] Error deleting findings chunk:", err.message)),
+        ),
+      )
+
+      // Delete inspections
       await supabase.from("inspections").delete().eq("area_id", id)
     }
 
@@ -152,7 +174,18 @@ export async function deleteArea(id: string): Promise<{ success: boolean; error?
     const checklistIds = checklists?.map((c) => c.id) || []
 
     if (checklistIds.length > 0) {
-      await supabase.from("checklist_items").delete().in("checklist_id", checklistIds)
+      // Delete checklist items using chunks
+      const itemChunks = chunkArray(checklistIds, 500)
+      await Promise.all(
+        itemChunks.map((chunk) =>
+          supabase
+            .from("checklist_items")
+            .delete()
+            .in("checklist_id", chunk)
+            .catch((err) => logger.error("[v0] Error deleting checklist items chunk:", err.message)),
+        ),
+      )
+
       await supabase.from("checklists").delete().eq("area_id", id)
     }
 
