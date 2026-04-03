@@ -2,11 +2,9 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { FirstTimeLoader } from "@/components/first-time-loader"
-import { AppNavigation } from "@/components/app-navigation"
 import "./globals.css"
 import { Suspense } from "react"
-
-// Force rebuild - v121 navigation fix
+import { SidebarProvider, Sidebar, SidebarContent, SidebarRail, SidebarInset } from "@/components/sidebar"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -58,10 +56,19 @@ export default function RootLayout({
       <body className={`font-sans ${inter.variable}`}>
         <Suspense fallback={null}>
           <FirstTimeLoader>
-            <AppNavigation />
-            <main>
-              {children}
-            </main>
+            <SidebarProvider>
+              <Sidebar>
+                <SidebarContent>
+                  {/* Navigation items will be added here */}
+                </SidebarContent>
+                <SidebarRail />
+              </Sidebar>
+              <SidebarInset>
+                <main>
+                  {children}
+                </main>
+              </SidebarInset>
+            </SidebarProvider>
           </FirstTimeLoader>
         </Suspense>
       </body>
