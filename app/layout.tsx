@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { FirstTimeLoader } from "@/components/first-time-loader"
+import { AppNavigation } from "@/components/app-navigation"
 import "./globals.css"
 import { Suspense } from "react"
 
@@ -54,9 +55,16 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${inter.variable}`}>
         <Suspense fallback={null}>
-          <FirstTimeLoader>{children}</FirstTimeLoader>
+          <FirstTimeLoader>
+            <AppNavigation />
+            {/* Contenido principal con margen en desktop y padding en móvil */}
+            <main className="lg:ml-56 pb-20 lg:pb-0">
+              {children}
+            </main>
+          </FirstTimeLoader>
         </Suspense>
       </body>
     </html>
   )
 }
+
