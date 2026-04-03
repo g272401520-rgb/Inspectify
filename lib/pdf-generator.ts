@@ -119,6 +119,9 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       stats.totalCriteria > 0 ? ((stats.totalCriteria - stats.totalFindings) / stats.totalCriteria) * 100 : 100
 
     const isRegistroChecklist = checklist.type === "registro"
+    
+    // Dynamic section numbering based on content
+    let sectionNumber = 1
 
     let yPosition = 20
 
@@ -186,14 +189,15 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
         yPosition = 20
       }
 
-      doc.setFillColor(...COLORS.accent)
-      doc.rect(15, yPosition, 180, 8, "F")
-      doc.setFontSize(14)
-      doc.setTextColor(...COLORS.white)
-      doc.setFont("helvetica", "bold")
-      doc.text("2. TABLA DE REGISTROS", 20, yPosition + 5.5)
-      doc.setFont("helvetica", "normal")
-      yPosition += 13
+    doc.setFillColor(...COLORS.accent)
+    doc.rect(15, yPosition, 180, 8, "F")
+    doc.setFontSize(14)
+    doc.setTextColor(...COLORS.white)
+    doc.setFont("helvetica", "bold")
+    doc.text(`${sectionNumber}. RESUMEN DE LA INSPECCIÓN`, 20, yPosition + 5.5)
+    doc.setFont("helvetica", "normal")
+    yPosition += 13
+    sectionNumber++
 
       const registroTableData = checklist.items.map((item) => {
         const finding = inspection.findings.find((f) => f.itemId === item.id)
@@ -251,9 +255,10 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
     doc.setFontSize(14)
     doc.setTextColor(...COLORS.white)
     doc.setFont("helvetica", "bold")
-    doc.text(isRegistroChecklist ? "3. GRÁFICO DE DISTRIBUCIÓN" : "2. GRÁFICOS Y ESTADÍSTICAS", 20, yPosition + 5.5)
+    doc.text(`${sectionNumber}. GRÁFICO DE DISTRIBUCIÓN` + (isRegistroChecklist ? "" : " Y ESTADÍSTICAS"), 20, yPosition + 5.5)
     doc.setFont("helvetica", "normal")
     yPosition += 13
+    sectionNumber++
 
     if (!isRegistroChecklist) {
       doc.setFillColor(...COLORS.primary)
@@ -261,7 +266,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       doc.setFontSize(12)
       doc.setTextColor(...COLORS.white)
       doc.setFont("helvetica", "bold")
-      doc.text("2.1 Resumen de Cumplimiento", 20, yPosition + 5.5)
+      doc.text(`${sectionNumber}.1 Resumen de Cumplimiento`, 20, yPosition + 5.5)
       doc.setFont("helvetica", "normal")
       yPosition += 13
     }
@@ -347,7 +352,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       doc.setFontSize(12)
       doc.setTextColor(...COLORS.white)
       doc.setFont("helvetica", "bold")
-      doc.text("2.2 Hallazgos por Categoría", 20, yPosition + 5.5)
+      doc.text(`${sectionNumber}.2 Hallazgos por Categoría`, 20, yPosition + 5.5)
       doc.setFont("helvetica", "normal")
       yPosition += 13
 
@@ -395,7 +400,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       doc.setFontSize(12)
       doc.setTextColor(...COLORS.white)
       doc.setFont("helvetica", "bold")
-      doc.text("2.3 Cumplimiento por Categoría", 20, yPosition + 5.5)
+      doc.text(`${sectionNumber}.3 Cumplimiento por Categoría`, 20, yPosition + 5.5)
       doc.setFont("helvetica", "normal")
       yPosition += 13
 
@@ -453,7 +458,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       doc.setFontSize(14)
       doc.setTextColor(...COLORS.white)
       doc.setFont("helvetica", "bold")
-      doc.text(isRegistroChecklist ? "4. HALLAZGOS NO CONFORMES" : "4. HALLAZGOS NO CONFORMES", 20, yPosition + 5.5)
+      doc.text(`${sectionNumber + 1}. HALLAZGOS NO CONFORMES`, 20, yPosition + 5.5)
       doc.setFont("helvetica", "normal")
       yPosition += 15
 
@@ -834,14 +839,15 @@ export async function generateQuickInspectionPDF(data: {
       yPosition = 20
     }
 
-    doc.setFillColor(...COLORS.accent)
-    doc.rect(15, yPosition, 180, 8, "F")
-    doc.setFontSize(14)
-    doc.setTextColor(...COLORS.white)
-    doc.setFont("helvetica", "bold")
-    doc.text("2. GRÁFICOS Y ESTADÍSTICAS", 20, yPosition + 5.5)
-    doc.setFont("helvetica", "normal")
-    yPosition += 13
+      doc.setFillColor(...COLORS.accent)
+      doc.rect(15, yPosition, 180, 8, "F")
+      doc.setFontSize(14)
+      doc.setTextColor(...COLORS.white)
+      doc.setFont("helvetica", "bold")
+      doc.text(`${sectionNumber}. TABLA DE REGISTROS`, 20, yPosition + 5.5)
+      doc.setFont("helvetica", "normal")
+      yPosition += 13
+      sectionNumber++
 
     doc.setFillColor(...COLORS.primary)
     doc.rect(15, yPosition, 180, 8, "F")
