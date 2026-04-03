@@ -6,6 +6,8 @@ import { AppNavigation } from "@/components/app-navigation"
 import "./globals.css"
 import { Suspense } from "react"
 
+// Force rebuild - v121 navigation fix
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
