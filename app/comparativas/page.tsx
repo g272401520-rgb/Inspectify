@@ -24,7 +24,6 @@ import {
 } from "recharts"
 import { ChartContainer } from "@/components/ui/chart"
 import { useToast } from "@/hooks/use-toast"
-import { PageHeader } from "@/components/page-header"
 
 type TimeFilter = "3months" | "6months" | "1year" | "all"
 
@@ -290,16 +289,15 @@ export default function ComparativasPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader
-        variant="title"
-        backHref="/"
-        title="Comparativas y Tendencias"
-        subtitle="Analiza la evolución de las inspecciones a lo largo del tiempo"
-      />
-
+    <>
       {/* Main Content */}
       <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Comparativas y Tendencias</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Analiza el rendimiento y evolución de tus inspecciones a lo largo del tiempo</p>
+        </div>
+
         {/* Filters */}
         <Card className="mb-6 md:mb-8">
           <CardHeader className="px-4 md:px-6">
@@ -664,6 +662,6 @@ export default function ComparativasPage() {
           </div>
         )}
       </main>
-    </div>
+    </>
   )
 }
