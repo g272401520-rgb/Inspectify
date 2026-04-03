@@ -958,20 +958,13 @@ export async function getInspectionsWithFindings(): Promise<Inspection[]> {
 
   // Fetch all photos for these findings
   let photosData: any[] = []
-  if (findingIds.length > 0 && findingIds.every((id) => id && typeof id === 'string')) {
-    try {
-      const { data, error: photosError } = await supabase
-        .from("finding_photos")
-        .select("*")
-        .in("finding_id", findingIds)
+  if (findingIds.length > 0) {
+    const { data, error: photosError } = await supabase.from("finding_photos").select("*").in("finding_id", findingIds)
 
-      if (photosError) {
-        logger.error("Error fetching photos:", photosError.message || photosError)
-      } else {
-        photosData = data || []
-      }
-    } catch (error) {
-      logger.error("[v0] Exception fetching photos:", error)
+    if (photosError) {
+      logger.error("Error fetching photos:", photosError.message || photosError)
+    } else {
+      photosData = data || []
     }
   }
 
