@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { SidebarNav } from "./sidebar-nav"
+import { SidebarNav } from './sidebar-nav'
 
 export function AppNavigation() {
   return <SidebarNav />
