@@ -57,8 +57,8 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <FirstTimeLoader>
             <AppNavigation />
-            {/* Contenido principal con margen en desktop y padding en móvil */}
-            <main className="lg:ml-56 pb-20 lg:pb-0">
+            {/* Contenido principal con padding en móvil para bottom nav */}
+            <main className="pb-16 lg:pb-0">
               {children}
             </main>
           </FirstTimeLoader>
