@@ -14,11 +14,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Inspectify - Gestión de Calidad",
   description: "Sistema de gestión de calidad profesional",
-  manifest: "/manifest.json",
-  themeColor: "#1a2332",
+  themeColor: "#054078",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black",
     title: "Inspectify",
   },
   viewport: {
@@ -52,7 +51,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Inspectify" />
       </head>
-      <body className={`font-sans ${inter.variable}`}>
+      <body className={`font-sans ${inter.variable} bg-[#054078]`}>
         <Suspense fallback={null}>
           <FirstTimeLoader>{children}</FirstTimeLoader>
         </Suspense>
