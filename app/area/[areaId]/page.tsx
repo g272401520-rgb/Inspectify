@@ -651,6 +651,6 @@ export default function AreaPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }
