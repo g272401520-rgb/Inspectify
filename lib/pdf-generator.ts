@@ -112,11 +112,6 @@ async function loadAndOptimizeImage(photoUrl: string): Promise<{ dataUrl: string
  */
 export async function generateInspectionPDF(inspection: Inspection, area: Area, checklist: Checklist): Promise<void> {
   try {
-    // Guard clauses para validar datos requeridos
-    if (!area?.name) throw new Error("El área no tiene nombre")
-    if (!checklist?.items?.length) throw new Error("El checklist no tiene criterios")
-    if (!inspection?.inspectorName) throw new Error("Falta el nombre del inspector")
-
     console.log("[v0] generateInspectionPDF: Iniciando generación de PDF para INSPECCIÓN NORMAL...")
     const doc = new jsPDF()
     const stats = calculateInspectionStats(inspection, checklist)
@@ -124,9 +119,6 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       stats.totalCriteria > 0 ? ((stats.totalCriteria - stats.totalFindings) / stats.totalCriteria) * 100 : 100
 
     const isRegistroChecklist = checklist.type === "registro"
-
-    // Contador dinámico de secciones para numeración consistente
-    let sectionNumber = 0
 
     let yPosition = 20
 
@@ -143,14 +135,12 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
 
     yPosition = 50
 
-    // Sección 1: RESUMEN DE LA INSPECCIÓN
-    sectionNumber++
     doc.setFillColor(...COLORS.accent)
     doc.rect(15, yPosition, 180, 8, "F")
     doc.setFontSize(14)
     doc.setTextColor(...COLORS.white)
     doc.setFont("helvetica", "bold")
-    doc.text(`${sectionNumber}. RESUMEN DE LA INSPECCIÓN`, 20, yPosition + 5.5)
+    doc.text("1. RESUMEN DE LA INSPECCIÓN", 20, yPosition + 5.5)
     doc.setFont("helvetica", "normal")
     yPosition += 13
 
@@ -188,22 +178,20 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       margin: { left: 15, right: 15 },
     })
 
-    yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 15
+    yPosition = (doc as any).lastAutoTable.finalY + 15
 
-    // Sección 2: TABLA DE REGISTROS (solo si es registro checklist)
     if (isRegistroChecklist) {
       if (yPosition > 200) {
         doc.addPage()
         yPosition = 20
       }
 
-      sectionNumber++
       doc.setFillColor(...COLORS.accent)
       doc.rect(15, yPosition, 180, 8, "F")
       doc.setFontSize(14)
       doc.setTextColor(...COLORS.white)
       doc.setFont("helvetica", "bold")
-      doc.text(`${sectionNumber}. TABLA DE REGISTROS`, 20, yPosition + 5.5)
+      doc.text("2. TABLA DE REGISTROS", 20, yPosition + 5.5)
       doc.setFont("helvetica", "normal")
       yPosition += 13
 
@@ -250,7 +238,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
         },
       })
 
-      yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 15
+      yPosition = (doc as any).lastAutoTable.finalY + 15
     }
 
     if (yPosition > 210) {
@@ -258,14 +246,12 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       yPosition = 20
     }
 
-    // Sección 3: GRÁFICOS Y ESTADÍSTICAS
-    sectionNumber++
     doc.setFillColor(...COLORS.accent)
     doc.rect(15, yPosition, 180, 8, "F")
     doc.setFontSize(14)
     doc.setTextColor(...COLORS.white)
     doc.setFont("helvetica", "bold")
-    doc.text(`${sectionNumber}. GRÁFICOS Y ESTADÍSTICAS`, 20, yPosition + 5.5)
+    doc.text(isRegistroChecklist ? "3. GRÁFICO DE DISTRIBUCIÓN" : "2. GRÁFICOS Y ESTADÍSTICAS", 20, yPosition + 5.5)
     doc.setFont("helvetica", "normal")
     yPosition += 13
 
@@ -275,16 +261,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       doc.setFontSize(12)
       doc.setTextColor(...COLORS.white)
       doc.setFont("helvetica", "bold")
-      doc.text(`${sectionNumber}.1 Resumen de Cumplimiento`, 20, yPosition + 5.5)
-      doc.setFont("helvetica", "normal")
-      yPosition += 13
-    } else {
-      doc.setFillColor(...COLORS.primary)
-      doc.rect(15, yPosition, 180, 8, "F")
-      doc.setFontSize(12)
-      doc.setTextColor(...COLORS.white)
-      doc.setFont("helvetica", "bold")
-      doc.text(`${sectionNumber}.1 Resumen de Cumplimiento`, 20, yPosition + 5.5)
+      doc.text("2.1 Resumen de Cumplimiento", 20, yPosition + 5.5)
       doc.setFont("helvetica", "normal")
       yPosition += 13
     }
@@ -370,7 +347,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       doc.setFontSize(12)
       doc.setTextColor(...COLORS.white)
       doc.setFont("helvetica", "bold")
-      doc.text(`${sectionNumber}.2 Hallazgos por Categoría`, 20, yPosition + 5.5)
+      doc.text("2.2 Hallazgos por Categoría", 20, yPosition + 5.5)
       doc.setFont("helvetica", "normal")
       yPosition += 13
 
@@ -398,7 +375,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
         margin: { left: 15, right: 15 },
       })
 
-      yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 15
+      yPosition = (doc as any).lastAutoTable.finalY + 15
     }
 
     if (!isRegistroChecklist && Object.keys(stats.findingsByCategory).length > 0) {
@@ -418,7 +395,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       doc.setFontSize(12)
       doc.setTextColor(...COLORS.white)
       doc.setFont("helvetica", "bold")
-      doc.text(`${sectionNumber}.3 Cumplimiento por Categoría`, 20, yPosition + 5.5)
+      doc.text("2.3 Cumplimiento por Categoría", 20, yPosition + 5.5)
       doc.setFont("helvetica", "normal")
       yPosition += 13
 
@@ -471,14 +448,12 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       doc.addPage()
       yPosition = 20
 
-      // Sección 4: HALLAZGOS NO CONFORMES (número dinámico)
-      sectionNumber++
       doc.setFillColor(...COLORS.accent)
       doc.rect(15, yPosition, 180, 8, "F")
       doc.setFontSize(14)
       doc.setTextColor(...COLORS.white)
       doc.setFont("helvetica", "bold")
-      doc.text(`${sectionNumber}. HALLAZGOS NO CONFORMES`, 20, yPosition + 5.5)
+      doc.text(isRegistroChecklist ? "4. HALLAZGOS NO CONFORMES" : "4. HALLAZGOS NO CONFORMES", 20, yPosition + 5.5)
       doc.setFont("helvetica", "normal")
       yPosition += 15
 
@@ -554,7 +529,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
           margin: { left: 15, right: 15 },
         })
 
-        yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 10
+        yPosition = (doc as any).lastAutoTable.finalY + 10
 
         doc.setFontSize(10)
         doc.setFont("helvetica", "bold")
@@ -689,7 +664,7 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
           showHead: "firstPage",
         })
 
-        yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 8
+        yPosition = (doc as any).lastAutoTable.finalY + 8
 
         doc.setFontSize(9)
         doc.setTextColor(150, 150, 150)
@@ -789,17 +764,10 @@ export async function generateQuickInspectionPDF(data: {
   hallazgos: Array<{ descripcion: string; fotos: string[] }>
   }): Promise<void> {
   try {
-    // Guard clauses para validar datos requeridos en inspección rápida
-    if (!data?.lugar) throw new Error("Falta el lugar de inspección")
-    if (!data?.inspector) throw new Error("Falta el nombre del inspector")
-
   console.log("[v0] generateQuickInspectionPDF: Generando PDF para INSPECCIÓN RÁPIDA...")
   console.log("[v0] ✓ Confirmado: PDF generado SOLO por solicitud manual del usuario")
   console.log("[v0] ✓ No hay generación automática")
     const doc = new jsPDF()
-
-    // Contador dinámico de secciones
-    let sectionNumber = 0
 
     let yPosition = 20
 
@@ -816,14 +784,12 @@ export async function generateQuickInspectionPDF(data: {
 
     yPosition = 50
 
-    // Sección 1: RESUMEN DE LA INSPECCIÓN
-    sectionNumber++
     doc.setFillColor(...COLORS.accent)
     doc.rect(15, yPosition, 180, 8, "F")
     doc.setFontSize(14)
     doc.setTextColor(...COLORS.white)
     doc.setFont("helvetica", "bold")
-    doc.text(`${sectionNumber}. RESUMEN DE LA INSPECCIÓN`, 20, yPosition + 5.5)
+    doc.text("1. RESUMEN DE LA INSPECCIÓN", 20, yPosition + 5.5)
     doc.setFont("helvetica", "normal")
     yPosition += 13
 
@@ -861,21 +827,19 @@ export async function generateQuickInspectionPDF(data: {
       margin: { left: 15, right: 15 },
     })
 
-    yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 15
+    yPosition = (doc as any).lastAutoTable.finalY + 15
 
     if (yPosition > 210) {
       doc.addPage()
       yPosition = 20
     }
 
-    // Sección 2: GRÁFICOS Y ESTADÍSTICAS
-    sectionNumber++
     doc.setFillColor(...COLORS.accent)
     doc.rect(15, yPosition, 180, 8, "F")
     doc.setFontSize(14)
     doc.setTextColor(...COLORS.white)
     doc.setFont("helvetica", "bold")
-    doc.text(`${sectionNumber}. GRÁFICOS Y ESTADÍSTICAS`, 20, yPosition + 5.5)
+    doc.text("2. GRÁFICOS Y ESTADÍSTICAS", 20, yPosition + 5.5)
     doc.setFont("helvetica", "normal")
     yPosition += 13
 
@@ -884,7 +848,7 @@ export async function generateQuickInspectionPDF(data: {
     doc.setFontSize(12)
     doc.setTextColor(...COLORS.white)
     doc.setFont("helvetica", "bold")
-    doc.text(`${sectionNumber}.1 Resumen de Cumplimiento`, 20, yPosition + 5.5)
+    doc.text("2.1 Resumen de Cumplimiento", 20, yPosition + 5.5)
     doc.setFont("helvetica", "normal")
     yPosition += 13
 
@@ -948,14 +912,12 @@ export async function generateQuickInspectionPDF(data: {
       doc.addPage()
       yPosition = 20
 
-      // Sección 3: HALLAZGOS NO CONFORMES
-      sectionNumber++
       doc.setFillColor(...COLORS.accent)
       doc.rect(15, yPosition, 180, 8, "F")
       doc.setFontSize(14)
       doc.setTextColor(...COLORS.white)
       doc.setFont("helvetica", "bold")
-      doc.text(`${sectionNumber}. HALLAZGOS NO CONFORMES`, 20, yPosition + 5.5)
+      doc.text("3. HALLAZGOS NO CONFORMES", 20, yPosition + 5.5)
       doc.setFont("helvetica", "normal")
       yPosition += 15
 
@@ -1028,7 +990,7 @@ export async function generateQuickInspectionPDF(data: {
           showHead: "firstPage",
         })
 
-        yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 10
+        yPosition = (doc as any).lastAutoTable.finalY + 10
 
         if (hallazgo.fotos.length > 0) {
           doc.setFontSize(10)
@@ -1176,7 +1138,7 @@ export async function generateQuickInspectionPDF(data: {
           showHead: "firstPage",
         })
 
-        yPosition = (doc as any).lastAutoTable?.finalY ?? yPosition + 8
+        yPosition = (doc as any).lastAutoTable.finalY + 8
 
         doc.setFontSize(9)
         doc.setTextColor(150, 150, 150)

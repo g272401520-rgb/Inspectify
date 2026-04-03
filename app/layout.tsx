@@ -54,14 +54,9 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${inter.variable}`}>
         <Suspense fallback={null}>
-          <FirstTimeLoader>
-            <main>
-              {children}
-            </main>
-          </FirstTimeLoader>
+          <FirstTimeLoader>{children}</FirstTimeLoader>
         </Suspense>
       </body>
     </html>
   )
 }
-
