@@ -209,10 +209,12 @@ export default function InspectionPage() {
   }
 
   const saveToDrafts = () => {
-    if (!inspectorName.trim()) {
+    // Guard: ensure required params exist
+    if (!areaId || !checklistId) {
+      logger.error("[v0] saveToDrafts: Missing areaId or checklistId")
       toast({
         title: "Error",
-        description: "Ingresa el nombre del inspector antes de guardar como borrador",
+        description: "No se puede guardar el borrador sin el área o checklist",
         variant: "destructive",
       })
       return
@@ -225,7 +227,7 @@ export default function InspectionPage() {
     const totalCount = checklist?.items?.length || 0
 
     const draft = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       inspectorName,
       criteriaStates,
       timestamp: Date.now(),
@@ -253,9 +255,15 @@ export default function InspectionPage() {
       setHasUnsavedChanges(false)
     } catch (error) {
       logger.error("[v0] Error saving draft:", error)
+      
+      // Distinguish between QuotaExceededError and other errors
+      const isQuotaError = error instanceof DOMException && error.name === 'QuotaExceededError'
+      
       toast({
         title: "Error",
-        description: "No se pudo guardar el borrador",
+        description: isQuotaError
+          ? "Almacenamiento lleno. Elimina borradores anteriores."
+          : "No se pudo guardar el borrador",
         variant: "destructive",
       })
     }
