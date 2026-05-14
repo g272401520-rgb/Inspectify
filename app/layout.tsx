@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { FirstTimeLoader } from "@/components/first-time-loader"
+import { AppInstallDialog } from "@/components/app-install-dialog"
 import "./globals.css"
 import { Suspense } from "react"
 
@@ -54,6 +55,7 @@ export default function RootLayout({
       <body className={`font-sans ${inter.variable} bg-[#054078]`}>
         <Suspense fallback={null}>
           <FirstTimeLoader>{children}</FirstTimeLoader>
+          <AppInstallDialog />
         </Suspense>
       </body>
     </html>

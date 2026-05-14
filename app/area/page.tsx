@@ -242,31 +242,31 @@ export default function AreaPage() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+      <main className="container mx-auto px-4 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col gap-4">
             <div>
-              <h2 className="text-3xl font-bold text-foreground">Checklists Disponibles</h2>
-              <p className="mt-2 text-muted-foreground">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Checklists Disponibles</h2>
+              <p className="mt-2 text-sm sm:text-base text-muted-foreground">
                 Selecciona un checklist para iniciar una inspección o crea uno nuevo
               </p>
             </div>
-            <div className="flex gap-2">
-              <Link href={createLink("/area/nuevo-checklist", { areaId })}>
-                <Button variant="outline">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Crear Manual
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Link href={createLink("/area/nuevo-checklist", { areaId })} className="flex-1 sm:flex-none">
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  <span>Crear Manual</span>
                 </Button>
               </Link>
-              <Link href={createLink("/area/nuevo-registro", { areaId })}>
-                <Button variant="outline">
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Crear Registros
+              <Link href={createLink("/area/nuevo-registro", { areaId })} className="flex-1 sm:flex-none">
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  <span>Crear Registros</span>
                 </Button>
               </Link>
-              <Button onClick={() => setShowImportDialog(true)} variant="outline">
-                <Upload className="mr-2 h-4 w-4" />
-                Importar Excel
+              <Button onClick={() => setShowImportDialog(true)} variant="outline" className="w-full sm:w-auto">
+                <Upload className="h-4 w-4 mr-2" />
+                <span>Importar Excel</span>
               </Button>
             </div>
           </div>
@@ -275,27 +275,27 @@ export default function AreaPage() {
         {/* Checklists Grid */}
         {checklists.length === 0 ? (
           <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-16">
+            <CardContent className="flex flex-col items-center justify-center py-16 px-4">
               <FileSpreadsheet className="h-16 w-16 text-muted-foreground mb-4" />
               <h3 className="text-xl font-semibold text-foreground mb-2">No hay checklists creados</h3>
-              <p className="text-muted-foreground mb-6 text-center max-w-md">
+              <p className="text-muted-foreground mb-6 text-center max-w-md text-sm">
                 Crea tu primer checklist manualmente o importa uno desde un archivo Excel con el formato: Categoría |
                 Subcategoría | Criterio
               </p>
-              <div className="flex gap-2">
-                <Link href={createLink("/area/nuevo-checklist", { areaId })}>
-                  <Button variant="outline">
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Link href={createLink("/area/nuevo-checklist", { areaId })} className="flex-1 sm:flex-none">
+                  <Button variant="outline" className="w-full">
                     <Plus className="mr-2 h-4 w-4" />
                     Crear Manual
                   </Button>
                 </Link>
-                <Link href={createLink("/area/nuevo-registro", { areaId })}>
-                  <Button variant="outline">
+                <Link href={createLink("/area/nuevo-registro", { areaId })} className="flex-1 sm:flex-none">
+                  <Button variant="outline" className="w-full">
                     <FileSpreadsheet className="mr-2 h-4 w-4" />
                     Crear Registros
                   </Button>
                 </Link>
-                <Button onClick={() => setShowImportDialog(true)} variant="outline">
+                <Button onClick={() => setShowImportDialog(true)} variant="outline" className="w-full sm:w-auto">
                   <Upload className="mr-2 h-4 w-4" />
                   Importar Excel
                 </Button>
@@ -303,37 +303,48 @@ export default function AreaPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {checklists.map((checklist) => (
-              <Card key={checklist.id} className="group hover:border-primary transition-colors">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="truncate">{checklist.name}</span>
-                    <div className="flex items-center gap-2">
-                      {checklist.type === "registro" && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Registro</span>
-                      )}
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Link href={createLink("/area/editar-checklist", { areaId, checklistId: checklist.id })}>
-                          <Button variant="ghost" size="sm">
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteChecklist(checklist.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+              <Card key={checklist.id} className="hover:border-primary transition-colors flex flex-col">
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-base sm:text-lg truncate">{checklist.name}</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm mt-1">
+                        {(checklist.items || []).length}{" "}
+                        {checklist.type === "registro" ? "registros" : "criterios de inspección"}
+                      </CardDescription>
                     </div>
-                  </CardTitle>
-                  <CardDescription>
-                    {(checklist.items || []).length}{" "}
-                    {checklist.type === "registro" ? "registros" : "criterios de inspección"}
-                  </CardDescription>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {checklist.type === "registro" && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded whitespace-nowrap">
+                          Registro
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-1 mt-2 pt-2 border-t border-border">
+                    <Link href={createLink("/area/editar-checklist", { areaId, checklistId: checklist.id })} className="flex-1">
+                      <Button variant="ghost" size="sm" className="w-full justify-start">
+                        <Edit2 className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="hidden sm:inline text-xs">Editar</span>
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteChecklist(checklist.id)}
+                      className="flex-1 justify-start"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span className="hidden sm:inline text-xs">Eliminar</span>
+                    </Button>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <Link href={createLink("/inspeccion", { areaId, checklistId: checklist.id })}>
-                    <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                      <Play className="mr-2 h-4 w-4" />
+                <CardContent className="flex-1 flex flex-col pt-2">
+                  <Link href={createLink("/inspeccion", { areaId, checklistId: checklist.id })} className="flex-1">
+                    <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground text-sm">
+                      <Play className="h-4 w-4 mr-2" />
                       Iniciar Inspección
                     </Button>
                   </Link>
