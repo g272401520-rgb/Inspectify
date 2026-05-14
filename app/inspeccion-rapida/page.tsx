@@ -23,6 +23,8 @@ import {
 import Link from "next/link"
 import { AppLogo } from "@/components/app-logo"
 import { useToast } from "@/hooks/use-toast"
+import { useActionValidation } from "@/hooks/use-action-validation"
+import { ValidatedActionButton } from "@/components/validated-action-button"
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 import { ChartContainer } from "@/components/ui/chart"
 import { ChartDownloadButton } from "@/components/chart-download-button"
@@ -76,6 +78,7 @@ interface HallazgoDescription {
  */
 export default function InspeccionRapidaPage() {
   const { toast } = useToast()
+  const { validatePhotos, validateInspectionInfo, getValidationStatus } = useActionValidation()
   const [lugar, setLugar] = useState("")
   const [inspector, setInspector] = useState("")
   const [responsable, setResponsable] = useState("")
@@ -396,12 +399,8 @@ export default function InspeccionRapidaPage() {
   ]
 
   const handleDownloadZip = async () => {
-    if (photos.length === 0) {
-      toast({
-        title: "Sin fotos",
-        description: "No hay fotos para descargar",
-        variant: "destructive",
-      })
+    // Validar que haya fotos
+    if (!validatePhotos(photos)) {
       return
     }
 
@@ -676,30 +675,30 @@ export default function InspeccionRapidaPage() {
               </Link>
               <AppLogo />
             </div>
-            {photos.length > 0 && (
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setShowZipConfirm(true)}
-                  disabled={isDownloadingZip}
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 w-9 p-0 bg-white text-[#054078] hover:bg-white/90"
-                  title="Descargar ZIP"
-                >
-                  {isDownloadingZip ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                </Button>
-                <Button
-                  onClick={() => setShowPDFConfirm(true)}
-                  disabled={isGeneratingPDF}
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 w-9 p-0 bg-white text-[#054078] hover:bg-white/90"
-                  title="Generar Informe PDF"
-                >
-                  {isGeneratingPDF ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-                </Button>
-              </div>
-            )}
+            <div className="flex gap-2">
+              <ValidatedActionButton
+                onValidatedClick={() => setShowZipConfirm(true)}
+                isDisabled={photos.length === 0 || isDownloadingZip}
+                disabledTooltip={photos.length === 0 ? "Sin fotos para descargar" : "Descargando..."}
+                variant="ghost"
+                size="sm"
+                className="h-9 w-9 p-0 bg-white text-[#054078] hover:bg-white/90"
+                title="Descargar ZIP"
+              >
+                {isDownloadingZip ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              </ValidatedActionButton>
+              <ValidatedActionButton
+                onValidatedClick={() => setShowPDFConfirm(true)}
+                isDisabled={photos.length === 0 || isGeneratingPDF}
+                disabledTooltip={photos.length === 0 ? "Sin fotos para generar PDF" : "Generando..."}
+                variant="ghost"
+                size="sm"
+                className="h-9 w-9 p-0 bg-white text-[#054078] hover:bg-white/90"
+                title="Generar Informe PDF"
+              >
+                {isGeneratingPDF ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+              </ValidatedActionButton>
+            </div>
           </div>
         </div>
       </header>
