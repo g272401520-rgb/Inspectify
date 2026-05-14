@@ -4,6 +4,18 @@ import type { Area, Checklist, Inspection } from "./types"
 import { createClient } from "./supabase/server"
 import { logger } from "./logger"
 
+/**
+ * Divide un array en chunks de tamaño especificado
+ * Supabase tiene un límite de ~1000 elementos en .in() queries
+ */
+function chunkArray<T>(array: T[], chunkSize: number = 500): T[][] {
+  const chunks: T[][] = []
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize))
+  }
+  return chunks
+}
+
 async function getSupabaseOrNull() {
   try {
     const supabase = await createClient()
@@ -128,11 +140,33 @@ export async function deleteArea(id: string): Promise<{ success: boolean; error?
       const { data: findings } = await supabase.from("findings").select("id").in("inspection_id", inspectionIds)
       const findingIds = findings?.map((f) => f.id) || []
 
+      // Delete finding photos using chunks
       if (findingIds.length > 0) {
-        await supabase.from("finding_photos").delete().in("finding_id", findingIds)
+        const photoChunks = chunkArray(findingIds, 500)
+        await Promise.all(
+          photoChunks.map((chunk) =>
+            supabase
+              .from("finding_photos")
+              .delete()
+              .in("finding_id", chunk)
+              .catch((err) => logger.error("[v0] Error deleting photo chunk:", err.message)),
+          ),
+        )
       }
 
-      await supabase.from("findings").delete().in("inspection_id", inspectionIds)
+      // Delete findings using chunks
+      const findingChunks = chunkArray(inspectionIds, 500)
+      await Promise.all(
+        findingChunks.map((chunk) =>
+          supabase
+            .from("findings")
+            .delete()
+            .in("inspection_id", chunk)
+            .catch((err) => logger.error("[v0] Error deleting findings chunk:", err.message)),
+        ),
+      )
+
+      // Delete inspections
       await supabase.from("inspections").delete().eq("area_id", id)
     }
 
@@ -140,7 +174,18 @@ export async function deleteArea(id: string): Promise<{ success: boolean; error?
     const checklistIds = checklists?.map((c) => c.id) || []
 
     if (checklistIds.length > 0) {
-      await supabase.from("checklist_items").delete().in("checklist_id", checklistIds)
+      // Delete checklist items using chunks
+      const itemChunks = chunkArray(checklistIds, 500)
+      await Promise.all(
+        itemChunks.map((chunk) =>
+          supabase
+            .from("checklist_items")
+            .delete()
+            .in("checklist_id", chunk)
+            .catch((err) => logger.error("[v0] Error deleting checklist items chunk:", err.message)),
+        ),
+      )
+
       await supabase.from("checklists").delete().eq("area_id", id)
     }
 
@@ -958,24 +1003,36 @@ export async function getInspectionsWithFindings(): Promise<Inspection[]> {
   
   logger.log(`[v0] Found ${inspectionIds.length} inspections, ${findingIds.length} findings`)
 
-  // Fetch all photos for these findings
+  // Fetch all photos for these findings using chunking to avoid "Bad Request" errors
   let photosData: any[] = []
   if (findingIds.length > 0 && Array.isArray(findingIds)) {
     try {
-      const { data, error: photosError } = await supabase
-        .from("finding_photos")
-        .select("*")
-        .in("finding_id", findingIds)
+      // Divide findingIds into chunks of 500 (Supabase .in() limit ~1000)
+      const findingIdChunks = chunkArray(findingIds, 500)
+      logger.log(`[v0] Fetching photos in ${findingIdChunks.length} chunks`)
 
-      if (photosError) {
-        logger.error(
-          "[v0] Error fetching photos:",
-          `${photosError.message || photosError} (findingIds: ${findingIds.length} items)`,
-        )
-      } else {
-        photosData = data || []
-        logger.log(`[v0] Fetched ${photosData.length} photos`)
-      }
+      // Fetch photos for each chunk in parallel
+      const photoChunks = await Promise.all(
+        findingIdChunks.map(async (chunk) => {
+          const { data, error } = await supabase
+            .from("finding_photos")
+            .select("*")
+            .in("finding_id", chunk)
+
+          if (error) {
+            logger.error(
+              "[v0] Error fetching photos chunk:",
+              `${error.message || error} (chunk size: ${chunk.length})`,
+            )
+            return []
+          }
+          return data || []
+        }),
+      )
+
+      // Flatten all photo chunks into single array
+      photosData = photoChunks.flat()
+      logger.log(`[v0] Fetched ${photosData.length} photos in total`)
     } catch (photoError: any) {
       logger.error(
         "[v0] Exception fetching photos:",

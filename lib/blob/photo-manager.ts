@@ -167,43 +167,6 @@ export async function getFindingPhotosByType(
   }
 }
 
-    return data?.map((p) => p.photo_url) || []
-  } catch (error) {
-    console.error("[v0] Error fetching photos by type:", error)
-    return []
-  }
-}
-
-/**
- * Reemplaza todas las fotos de un hallazgo
- * @param findingId - ID del hallazgo
- * @param newBase64Images - Nuevas imágenes en base64
- * @param photoType - Tipo de foto
- * @param onProgress - Callback para reportar progreso
- * @returns Array de URLs de nuevas fotos
- */
-export async function replaceFindingPhotos(
-  findingId: string,
-  newBase64Images: string[],
-  photoType: "evidence" | "solution" | "before" | "after" = "evidence",
-  onProgress?: (current: number, total: number) => void,
-): Promise<string[]> {
-  try {
-    // Obtener fotos antiguas
-    const oldPhotos = await getFindingPhotosByType(findingId, photoType)
-
-    // Eliminar fotos antiguas
-    if (oldPhotos.length > 0) {
-      await deleteFindingPhotos(findingId, oldPhotos)
-    }
-
-    // Subir nuevas fotos
-    return await uploadFindingPhotos(findingId, newBase64Images, photoType, onProgress)
-  } catch (error) {
-    console.error("[v0] Error reemplazando fotos:", error)
-    throw error
-  }
-}
 
 /**
  * Obtiene estadísticas de fotos de una inspección
@@ -228,8 +191,30 @@ export async function getInspectionPhotoStats(inspectionId: string): Promise<{
 
     const findingIds = findings.map((f) => f.id)
 
-    // Obtener todas las fotos
-    const { data: photos } = await supabase.from("finding_photos").select("photo_type").in("finding_id", findingIds)
+    // Divide findingIds into chunks to avoid "Bad Request" errors with large arrays
+    const CHUNK_SIZE = 500
+    const chunks: string[][] = []
+    for (let i = 0; i < findingIds.length; i += CHUNK_SIZE) {
+      chunks.push(findingIds.slice(i, i + CHUNK_SIZE))
+    }
+
+    // Fetch photos from all chunks in parallel
+    const photoChunks = await Promise.all(
+      chunks.map(async (chunk) => {
+        const { data, error } = await supabase
+          .from("finding_photos")
+          .select("photo_type")
+          .in("finding_id", chunk)
+
+        if (error) {
+          console.error(`[v0] Error fetching photos chunk (size: ${chunk.length}):`, error.message)
+          return []
+        }
+        return data || []
+      }),
+    )
+
+    const photos = photoChunks.flat()
 
     const stats = {
       totalPhotos: photos?.length || 0,
@@ -244,3 +229,4 @@ export async function getInspectionPhotoStats(inspectionId: string): Promise<{
     return { totalPhotos: 0, evidencePhotos: 0, solutionPhotos: 0, totalSize: 0 }
   }
 }
+
