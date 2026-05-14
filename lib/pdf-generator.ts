@@ -311,16 +311,18 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       doc.setFontSize(11)
       doc.setFont("helvetica", "bold")
       doc.setTextColor(...COLORS.text)
+      const conformePercent = stats.totalCriteria > 0 ? ((conformeCount / stats.totalCriteria) * 100).toFixed(1) : "0"
       doc.text(
-        `Conforme: ${conformeCount} ${conformeCount === 1 ? "criterio" : "criterios"} (${((conformeCount / stats.totalCriteria) * 100).toFixed(1)}%)`,
+        `Conforme: ${conformeCount} ${conformeCount === 1 ? "criterio" : "criterios"} (${conformePercent}%)`,
         legendStartX + 10,
         legendY + 4.5,
       )
 
       doc.setFillColor(...COLORS.noConforme)
       doc.rect(legendStartX, legendY + 10, 6, 6, "F")
+      const noConformePercent = stats.totalCriteria > 0 ? ((stats.totalFindings / stats.totalCriteria) * 100).toFixed(1) : "0"
       doc.text(
-        `No Conforme: ${stats.totalFindings} ${stats.totalFindings === 1 ? "criterio" : "criterios"} (${((stats.totalFindings / stats.totalCriteria) * 100).toFixed(1)}%)`,
+        `No Conforme: ${stats.totalFindings} ${stats.totalFindings === 1 ? "criterio" : "criterios"} (${noConformePercent}%)`,
         legendStartX + 10,
         legendY + 14.5,
       )

@@ -116,8 +116,10 @@ export default function InspeccionRapidaPage() {
     })
   }
 
-  // Cargar datos guardados al montar
+  // Cargar datos guardados al montar (solo una vez)
   useEffect(() => {
+    let isMounted = true // Prevenir memory leaks si se desmonta durante carga
+    
     const loadData = async () => {
       try {
         const db = await initDB()
@@ -157,6 +159,8 @@ export default function InspeccionRapidaPage() {
         // Esperar a que ambas promesas terminen
         const [metaData, loadedPhotos] = await Promise.all([metaPromise, photoPromise])
         
+        if (!isMounted) return // Componente se desmontó, no actualizar estado
+        
         if (metaData) {
           setLugar((metaData.lugar as string) || "")
           setInspector((metaData.inspector as string) || "")
@@ -169,6 +173,8 @@ export default function InspeccionRapidaPage() {
         }
       } catch (error) {
         console.error("[v0] Error al cargar datos de IndexedDB:", error)
+        if (!isMounted) return // Componente se desmontó
+        
         // Fallback a localStorage
         const savedData = localStorage.getItem("inspeccionRapidaData")
         if (savedData) {
@@ -187,9 +193,13 @@ export default function InspeccionRapidaPage() {
     }
     
     loadData()
+    
+    return () => {
+      isMounted = false // Cleanup al desmontar
+    }
   }, [])
 
-  // Guardar datos cada vez que cambien
+  // Guardar datos cada vez que cambien (con debounce para evitar race conditions)
   useEffect(() => {
     const saveData = async () => {
       try {
@@ -212,7 +222,7 @@ export default function InspeccionRapidaPage() {
           metaTx.onerror = () => reject(metaTx.error)
         })
 
-        // Guardar fotos en IndexedDB
+        // Guardar fotos en IndexedDB (con sincronización correcta)
         const photoPromise = new Promise<void>((resolve, reject) => {
           const photoTx = db.transaction("fotos", "readwrite")
           const photoStore = photoTx.objectStore("fotos")
@@ -232,11 +242,11 @@ export default function InspeccionRapidaPage() {
           photoTx.onerror = () => reject(photoTx.error)
         })
 
-        // Esperar a que ambas transacciones terminen
+        // Esperar a que ambas transacciones terminen antes de continuar
         await Promise.all([metaPromise, photoPromise])
       } catch (error) {
         console.error("[v0] Error al guardar en IndexedDB:", error)
-        // Fallback: guardar solo metadata en localStorage
+        // Fallback: guardar solo metadata en localStorage (sin fotos que pesan mucho)
         localStorage.setItem("inspeccionRapidaData", JSON.stringify({
           lugar,
           inspector,
@@ -247,7 +257,12 @@ export default function InspeccionRapidaPage() {
       }
     }
     
-    saveData()
+    // Usar debounce para evitar guardar en cada cambio individual
+    const saveTimeout = setTimeout(() => {
+      saveData()
+    }, 1000) // Guardar 1 segundo después del último cambio
+    
+    return () => clearTimeout(saveTimeout) // Cleanup
   }, [lugar, inspector, responsable, photos, hallazgoDescriptions])
 
   const handlePhotoCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
