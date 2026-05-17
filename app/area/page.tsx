@@ -324,12 +324,15 @@ export default function AreaPage() {
                     </div>
                   </div>
                   <div className="flex gap-1 mt-2 pt-2 border-t border-border">
-                    <Link href={createLink("/area/editar-checklist", { areaId, checklistId: checklist.id })} className="flex-1">
-                      <Button variant="ghost" size="sm" className="w-full justify-start">
-                        <Edit2 className="h-4 w-4 mr-2 flex-shrink-0" />
-                        <span className="hidden sm:inline text-xs">Editar</span>
-                      </Button>
-                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.push(createLink("/area/editar-checklist", { areaId, checklistId: checklist.id }))}
+                      className="flex-1 justify-start"
+                    >
+                      <Edit2 className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span className="hidden sm:inline text-xs">Editar</span>
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
