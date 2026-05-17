@@ -28,6 +28,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { saveAreaAction, deleteAreaAction } from "@/lib/actions"
+import { useToast } from "@/hooks/use-toast"
 import type { Area } from "@/lib/types"
 import Link from "next/link"
 import { AppLogo } from "@/components/app-logo"
@@ -40,6 +41,7 @@ interface AreasClientProps {
 
 export function AreasClient({ initialAreas }: AreasClientProps) {
   const router = useRouter()
+  const { toast } = useToast()
   const [areas, setAreas] = useState<Area[]>(initialAreas)
   const [showNewAreaDialog, setShowNewAreaDialog] = useState(false)
   const [editingArea, setEditingArea] = useState<Area | null>(null)
@@ -51,49 +53,108 @@ export function AreasClient({ initialAreas }: AreasClientProps) {
   const [showDatabaseAlert, setShowDatabaseAlert] = useState(initialAreas.length === 0)
 
   const handleCreateArea = async () => {
-    if (!newAreaName.trim() || !newAreaResponsible.trim()) return
+    if (!newAreaName.trim() || !newAreaResponsible.trim()) {
+      toast({
+        title: "Campos requeridos",
+        description: "Por favor completa el nombre y responsable del área",
+        variant: "destructive",
+      })
+      return
+    }
 
     setIsCreating(true)
 
-    if (editingArea) {
-      const updatedArea = {
-        ...editingArea,
-        name: newAreaName.trim(),
-        responsible: newAreaResponsible.trim(),
+    try {
+      if (editingArea) {
+        const updatedArea = {
+          ...editingArea,
+          name: newAreaName.trim(),
+          responsible: newAreaResponsible.trim(),
+        }
+        const result = await saveAreaAction(updatedArea)
+        if (result.success) {
+          setAreas((prev) => prev.map((a) => (a.id === editingArea.id ? updatedArea : a)))
+          setShowDatabaseAlert(false)
+          toast({
+            title: "Éxito",
+            description: "Área actualizada correctamente",
+            variant: "default",
+          })
+        } else {
+          toast({
+            title: "Error",
+            description: result.error || "No se pudo actualizar el área",
+            variant: "destructive",
+          })
+        }
+      } else {
+        const newArea: Area = {
+          id: `area_${Date.now()}`,
+          name: newAreaName.trim(),
+          responsible: newAreaResponsible.trim(),
+          createdAt: new Date().toISOString(),
+        }
+        const result = await saveAreaAction(newArea)
+        if (result.success && result.id) {
+          setAreas((prev) => [{ ...newArea, id: result.id! }, ...prev])
+          setShowDatabaseAlert(false)
+          toast({
+            title: "Éxito",
+            description: "Área creada correctamente",
+            variant: "default",
+          })
+        } else {
+          toast({
+            title: "Error",
+            description: result.error || "No se pudo crear el área",
+            variant: "destructive",
+          })
+        }
       }
-      const result = await saveAreaAction(updatedArea)
-      if (result.success) {
-        setAreas((prev) => prev.map((a) => (a.id === editingArea.id ? updatedArea : a)))
-        setShowDatabaseAlert(false)
-      }
-    } else {
-      const newArea: Area = {
-        id: `area_${Date.now()}`,
-        name: newAreaName.trim(),
-        responsible: newAreaResponsible.trim(),
-        createdAt: new Date().toISOString(),
-      }
-      const result = await saveAreaAction(newArea)
-      if (result.success && result.id) {
-        setAreas((prev) => [{ ...newArea, id: result.id! }, ...prev])
-        setShowDatabaseAlert(false)
-      }
-    }
 
-    setNewAreaName("")
-    setNewAreaResponsible("")
-    setEditingArea(null)
-    setShowNewAreaDialog(false)
-    setIsCreating(false)
-    router.refresh()
+      setNewAreaName("")
+      setNewAreaResponsible("")
+      setEditingArea(null)
+      setShowNewAreaDialog(false)
+      router.refresh()
+    } catch (error: any) {
+      console.error("[v0] Error creating/updating area:", error)
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al procesar el área",
+        variant: "destructive",
+      })
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   const handleDeleteArea = async (id: string) => {
     if (confirm("¿Estás seguro de eliminar esta área? Se eliminarán también sus checklists asociados.")) {
-      const result = await deleteAreaAction(id)
-      if (result.success) {
-        setAreas((prev) => prev.filter((a) => a.id !== id))
-        router.refresh()
+      try {
+        const result = await deleteAreaAction(id)
+        if (result.success) {
+          setAreas((prev) => prev.filter((a) => a.id !== id))
+          toast({
+            title: "Éxito",
+            description: "Área eliminada correctamente",
+            variant: "default",
+          })
+          router.refresh()
+        } else {
+          toast({
+            title: "Error",
+            description: result.error || "No se pudo eliminar el área",
+            variant: "destructive",
+          })
+        }
+      } catch (error: any) {
+        console.error("[v0] Error deleting area:", error)
+        toast({
+          title: "Error",
+          description: "Ocurrió un error al eliminar el área",
+          variant: "destructive",
+        })
       }
     }
   }

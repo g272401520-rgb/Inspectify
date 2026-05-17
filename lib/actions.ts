@@ -36,11 +36,18 @@ export async function saveAreaAction(area: Area) {
   return result
 }
 
-export async function deleteAreaAction(id: string) {
-  const result = await deleteArea(id)
-  revalidatePath("/")
-  revalidatePath("/area")
-  return result
+export async function deleteAreaAction(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const result = await deleteArea(id)
+    if (result.success) {
+      revalidatePath("/")
+      revalidatePath("/area")
+    }
+    return result
+  } catch (error: any) {
+    console.error("[v0] Error in deleteAreaAction:", error)
+    return { success: false, error: error.message || "Error eliminando área" }
+  }
 }
 
 export async function saveChecklistAction(checklist: Checklist) {
