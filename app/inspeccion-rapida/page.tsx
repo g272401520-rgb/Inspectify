@@ -561,18 +561,30 @@ export default function InspeccionRapidaPage() {
 
     // Validar que todos los hallazgos tengan descripción (si los hay)
     if (hallazgos.length > 0) {
+      const hallazgossinDescripcion: string[] = []
+      
       for (const [hallazgoId] of hallazgosGrouped) {
         const descripcion = hallazgoDescriptions[hallazgoId]?.trim()
         
         if (!descripcion) {
-          console.log("[v0] Hallazgo sin descripción:", hallazgoId)
-          toast({
-            title: "Descripción requerida",
-            description: "Por favor agrega una descripción a todos los hallazgos",
-            variant: "destructive",
-          })
-          return
+          // Buscar el nombre del hallazgo del objeto hallazgos
+          const hallazgo = hallazgos.find((h) => h.id === hallazgoId)
+          hallazgossinDescripcion.push(hallazgo?.name || hallazgoId)
         }
+      }
+      
+      if (hallazgossinDescripcion.length > 0) {
+        const descripcionTexto = 
+          hallazgossinDescripcion.length === 1
+            ? `"${hallazgossinDescripcion[0]}"` 
+            : hallazgossinDescripcion.map((h) => `"${h}"`).join(", ")
+        
+        toast({
+          title: "Descripción requerida",
+          description: `Completa la descripción de: ${descripcionTexto}`,
+          variant: "destructive",
+        })
+        return
       }
     }
 
@@ -823,7 +835,18 @@ export default function InspeccionRapidaPage() {
 
                       return Array.from(hallazgosMap.entries()).map(([hallazgoId, fotosDelHallazgo], index) => (
                         <div key={hallazgoId} className="border-2 border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/20 rounded-lg p-4 space-y-4">
-                          <h3 className="font-bold text-red-700">HALLAZGO {String(index + 1).padStart(2, "0")}</h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-red-700">HALLAZGO {String(index + 1).padStart(2, "0")}</h3>
+                            {hallazgoDescriptions[hallazgoId]?.trim() ? (
+                              <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded font-medium">
+                                ✓ Con descripción
+                              </span>
+                            ) : (
+                              <span className="text-xs bg-red-200 text-red-800 px-2 py-1 rounded font-medium">
+                                ⚠ Sin descripción
+                              </span>
+                            )}
+                          </div>
 
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                             {fotosDelHallazgo.map((photo) => (
