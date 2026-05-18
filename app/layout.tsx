@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import { FirstTimeLoader } from "@/components/first-time-loader"
 import { AppInstallDialog } from "@/components/app-install-dialog"
@@ -12,19 +12,20 @@ const inter = Inter({
   display: "swap",
 })
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#054078",
+}
+
 export const metadata: Metadata = {
   title: "Inspectify - Gestión de Calidad",
   description: "Sistema de gestión de calidad profesional",
-  themeColor: "#054078",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black",
     title: "Inspectify",
-  },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
   },
   icons: {
     icon: [
