@@ -561,14 +561,14 @@ export default function InspeccionRapidaPage() {
 
     // Validar que todos los hallazgos tengan descripción (si los hay)
     if (hallazgos.length > 0) {
-      for (const [hallazgoId, hallazgoPhotos] of hallazgosGrouped) {
-        const hasDescription = hallazgoPhotos.some((photo) => hallazgoDescriptions[photo.id]?.trim())
+      for (const [hallazgoId] of hallazgosGrouped) {
+        const descripcion = hallazgoDescriptions[hallazgoId]?.trim()
         
-        if (!hasDescription) {
+        if (!descripcion) {
           console.log("[v0] Hallazgo sin descripción:", hallazgoId)
           toast({
             title: "Descripción requerida",
-            description: `Por favor agrega una descripción a todos los hallazgos`,
+            description: "Por favor agrega una descripción a todos los hallazgos",
             variant: "destructive",
           })
           return
@@ -581,20 +581,10 @@ export default function InspeccionRapidaPage() {
 
     try {
       // Crear hallazgos para PDF con las fotos agrupadas
-      const hallazgosForPDF = Array.from(hallazgosGrouped.entries()).map(([hallazgoId, hallazgoPhotos]) => {
-        let descripcion = ""
-        for (const photo of hallazgoPhotos) {
-          if (hallazgoDescriptions[photo.id]?.trim()) {
-            descripcion = hallazgoDescriptions[photo.id]
-            break
-          }
-        }
-        
-        return {
-          descripcion,
-          fotos: hallazgoPhotos.map((p) => p.dataUrl),
-        }
-      })
+      const hallazgosForPDF = Array.from(hallazgosGrouped.entries()).map(([hallazgoId, hallazgoPhotos]) => ({
+        descripcion: hallazgoDescriptions[hallazgoId] || "",
+        fotos: hallazgoPhotos.map((p) => p.dataUrl),
+      }))
 
       console.log("[v0] Datos preparados para PDF:")
       console.log("[v0] - Lugar:", lugar)
