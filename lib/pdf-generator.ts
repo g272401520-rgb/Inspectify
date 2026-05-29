@@ -1001,9 +1001,9 @@ export async function generateQuickInspectionPDF(data: {
           doc.setTextColor(...COLORS.primary)
           doc.text("Evidencia Fotográfica:", pageWidth / 2, yPosition, { align: "center" })
           doc.setFont("helvetica", "normal")
-          yPosition += 6
+          yPosition += 8
 
-          // Grid optimizado para landscape
+          // Grid optimizado para landscape con tamaños grandes
           const photoCount = hallazgo.fotos.length
           let colsPerRow = 2
           if (photoCount === 1) {
@@ -1012,11 +1012,11 @@ export async function generateQuickInspectionPDF(data: {
             colsPerRow = 2
           }
 
-          const photoPadding = 5
+          const photoPadding = 8
           const availableWidth = contentWidth - 2 * photoPadding
-          const photoSpacing = 6
-          const photoWidth = (availableWidth - photoSpacing) / colsPerRow
-          const maxPhotoHeight = 45
+          const photoSpacing = 12
+          const photoWidth = (availableWidth - (colsPerRow - 1) * photoSpacing) / colsPerRow
+          const maxPhotoHeight = 100
 
           for (let j = 0; j < hallazgo.fotos.length; j++) {
             const photoUrl = hallazgo.fotos[j]
@@ -1049,7 +1049,7 @@ export async function generateQuickInspectionPDF(data: {
               const row = Math.floor(j / colsPerRow)
 
               const xPos = margin + photoPadding + col * (photoWidth + photoSpacing) + (photoWidth - finalWidth) / 2
-              const yPos = yPosition + row * (maxPhotoHeight + 6)
+              const yPos = yPosition + row * (maxPhotoHeight + 12)
 
               // Validar que no se corte la imagen
               if (yPos + finalHeight > pageHeight - 20) {
@@ -1075,7 +1075,7 @@ export async function generateQuickInspectionPDF(data: {
 
           // Calcular posición Y después del grid
           const rowsNeeded = Math.ceil(photoCount / colsPerRow)
-          yPosition += rowsNeeded * (maxPhotoHeight + 6) + 3
+          yPosition += rowsNeeded * (maxPhotoHeight + 12) + 5
         } else {
           doc.setFontSize(9)
           doc.setTextColor(150, 150, 150)
