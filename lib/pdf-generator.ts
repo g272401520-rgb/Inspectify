@@ -966,7 +966,6 @@ export async function generateQuickInspectionPDF(data: {
         yPosition += 12
 
         const findingData = [
-          ["Criterio", "Hallazgo Identificado"],
           ["Descripción", hallazgo.descripcion || "Sin descripción"],
         ]
 
@@ -1002,27 +1001,22 @@ export async function generateQuickInspectionPDF(data: {
           doc.setTextColor(...COLORS.primary)
           doc.text("Evidencia Fotográfica:", pageWidth / 2, yPosition, { align: "center" })
           doc.setFont("helvetica", "normal")
-          yPosition += 8
+          yPosition += 6
 
-          // Grid dinámico de fotos según cantidad
+          // Grid optimizado para landscape
           const photoCount = hallazgo.fotos.length
-          let colsPerRow = 3
+          let colsPerRow = 2
           if (photoCount === 1) {
             colsPerRow = 1
-          } else if (photoCount === 2) {
+          } else if (photoCount >= 2) {
             colsPerRow = 2
-          } else if (photoCount === 3) {
-            colsPerRow = 3
-          } else if (photoCount === 4) {
-            colsPerRow = 2
-          } else if (photoCount >= 5) {
-            colsPerRow = 3
           }
 
-          const photoPadding = 8
+          const photoPadding = 5
           const availableWidth = contentWidth - 2 * photoPadding
-          const photoWidth = (availableWidth - (colsPerRow - 1) * 5) / colsPerRow
-          const maxPhotoHeight = 50
+          const photoSpacing = 6
+          const photoWidth = (availableWidth - photoSpacing) / colsPerRow
+          const maxPhotoHeight = 45
 
           for (let j = 0; j < hallazgo.fotos.length; j++) {
             const photoUrl = hallazgo.fotos[j]
@@ -1054,8 +1048,8 @@ export async function generateQuickInspectionPDF(data: {
               const col = j % colsPerRow
               const row = Math.floor(j / colsPerRow)
 
-              const xPos = margin + photoPadding + col * (photoWidth + 5) + (photoWidth - finalWidth) / 2
-              const yPos = yPosition + row * (maxPhotoHeight + 10)
+              const xPos = margin + photoPadding + col * (photoWidth + photoSpacing) + (photoWidth - finalWidth) / 2
+              const yPos = yPosition + row * (maxPhotoHeight + 6)
 
               // Validar que no se corte la imagen
               if (yPos + finalHeight > pageHeight - 20) {
@@ -1081,7 +1075,7 @@ export async function generateQuickInspectionPDF(data: {
 
           // Calcular posición Y después del grid
           const rowsNeeded = Math.ceil(photoCount / colsPerRow)
-          yPosition += rowsNeeded * (maxPhotoHeight + 10) + 5
+          yPosition += rowsNeeded * (maxPhotoHeight + 6) + 3
         } else {
           doc.setFontSize(9)
           doc.setTextColor(150, 150, 150)
