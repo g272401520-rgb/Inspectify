@@ -1003,79 +1003,159 @@ export async function generateQuickInspectionPDF(data: {
           doc.setFont("helvetica", "normal")
           yPosition += 8
 
-          // Grid optimizado para landscape con tamaños grandes
-          const photoCount = hallazgo.fotos.length
-          let colsPerRow = 2
-          if (photoCount === 1) {
-            colsPerRow = 1
-          } else if (photoCount >= 2) {
-            colsPerRow = 2
-          }
+          // Obtener aspect ratios de todas las imágenes
+          const photoAspectRatios = hallazgo.fotos.map((photoUrl) => {
+            const img = imageCache.get(photoUrl)
+            if (!img) return 0
+            return img.height / img.width
+          })
+
+          // Detectar orientaciones: < 0.7 = horizontal, > 1.4 = vertical, resto = cuadrado
+          const isHorizontal = (ratio: number) => ratio < 0.7
+          const isVertical = (ratio: number) => ratio > 1.4
 
           const photoPadding = 8
-          const availableWidth = contentWidth - 2 * photoPadding
           const photoSpacing = 12
-          const photoWidth = (availableWidth - (colsPerRow - 1) * photoSpacing) / colsPerRow
-          const maxPhotoHeight = 100
+          const availableWidth = contentWidth - 2 * photoPadding
+          const maxHeight = 90
 
-          for (let j = 0; j < hallazgo.fotos.length; j++) {
-            const photoUrl = hallazgo.fotos[j]
-            const optimizedImage = imageCache.get(photoUrl)
+          let photoIndex = 0
 
-            if (!optimizedImage) {
-              doc.setFontSize(8)
-              doc.setTextColor(150, 150, 150)
-              doc.text("Error", margin + photoPadding + (j % colsPerRow) * (photoWidth + 5), yPosition + 20)
-              continue
+          while (photoIndex < hallazgo.fotos.length) {
+            // Verificar espacio disponible en página actual
+            const minHeightNeeded = maxHeight + 10
+            if (yPosition + minHeightNeeded > pageHeight - 20) {
+              doc.addPage()
+              yPosition = 20
             }
 
-            try {
-              const aspectRatio = optimizedImage.height / optimizedImage.width
+            const currentRatio = photoAspectRatios[photoIndex]
+            const nextRatio = photoIndex + 1 < hallazgo.fotos.length ? photoAspectRatios[photoIndex + 1] : 0
 
-              if (!aspectRatio || isNaN(aspectRatio) || aspectRatio <= 0) {
-                console.error("[v0] Aspect ratio inválido:", aspectRatio)
+            // Determinar layout para esta fila
+            let rowPhotos: number[] = []
+            let rowHeight = maxHeight
+
+            if (hallazgo.fotos.length === 1) {
+              // Una foto: ocupar máximo ancho
+              rowPhotos = [photoIndex]
+            } else if (hallazgo.fotos.length === 2) {
+              // Dos fotos
+              if (isHorizontal(currentRatio) && isVertical(nextRatio)) {
+                // Horizontal + Vertical: horizontal grande, vertical pequeña
+                rowPhotos = [photoIndex, photoIndex + 1]
+                photoIndex += 2
+              } else if (isVertical(currentRatio) && isHorizontal(nextRatio)) {
+                // Vertical + Horizontal: vertical pequeña, horizontal grande
+                rowPhotos = [photoIndex, photoIndex + 1]
+                photoIndex += 2
+              } else {
+                // Mismo tipo: 1 x 2 o 2 x 1
+                rowPhotos = [photoIndex]
+              }
+            } else if (hallazgo.fotos.length >= 3) {
+              // Tres o más fotos
+              if (photoIndex === 0 && isHorizontal(currentRatio) && isVertical(nextRatio)) {
+                // Primera es horizontal, segunda es vertical
+                rowPhotos = [photoIndex, photoIndex + 1]
+                photoIndex += 2
+              } else if (photoIndex === 0 && isVertical(currentRatio) && isHorizontal(nextRatio)) {
+                // Primera es vertical, segunda es horizontal
+                rowPhotos = [photoIndex, photoIndex + 1]
+                photoIndex += 2
+              } else {
+                // Una sola foto en esta fila
+                rowPhotos = [photoIndex]
+              }
+            }
+
+            // Renderizar fotos de esta fila
+            const colsInRow = rowPhotos.length
+            let xStartPos = margin + photoPadding
+
+            for (let idx = 0; idx < rowPhotos.length; idx++) {
+              const j = rowPhotos[idx]
+              const photoUrl = hallazgo.fotos[j]
+              const optimizedImage = imageCache.get(photoUrl)
+
+              if (!optimizedImage) {
+                photoIndex++
                 continue
               }
 
-              let finalWidth = photoWidth
-              let finalHeight = photoWidth * aspectRatio
+              try {
+                const aspectRatio = photoAspectRatios[j]
 
-              if (finalHeight > maxPhotoHeight) {
-                finalHeight = maxPhotoHeight
-                finalWidth = maxPhotoHeight / aspectRatio
+                if (!aspectRatio || isNaN(aspectRatio) || aspectRatio <= 0) {
+                  photoIndex++
+                  continue
+                }
+
+                // Calcular ancho dinámico basado en tipo de foto
+                let photoWidth: number
+                if (colsInRow === 1) {
+                  photoWidth = availableWidth
+                } else if (colsInRow === 2) {
+                  // Dos fotos: distribuir inteligentemente
+                  if (isHorizontal(aspectRatio) && isVertical(photoAspectRatios[rowPhotos[1 - idx]])) {
+                    // Foto horizontal ocupa 60%, vertical ocupa 40%
+                    photoWidth = isHorizontal(aspectRatio) 
+                      ? (availableWidth - photoSpacing) * 0.6 
+                      : (availableWidth - photoSpacing) * 0.4
+                  } else if (isVertical(aspectRatio) && isHorizontal(photoAspectRatios[rowPhotos[1 - idx]])) {
+                    // Foto vertical ocupa 40%, horizontal ocupa 60%
+                    photoWidth = isVertical(aspectRatio) 
+                      ? (availableWidth - photoSpacing) * 0.4 
+                      : (availableWidth - photoSpacing) * 0.6
+                  } else {
+                    // Mismo tipo: mitad y mitad
+                    photoWidth = (availableWidth - photoSpacing) / 2
+                  }
+                } else {
+                  // Más de 2 columnas
+                  photoWidth = (availableWidth - (colsInRow - 1) * photoSpacing) / colsInRow
+                }
+
+                let finalWidth = photoWidth
+                let finalHeight = photoWidth * aspectRatio
+
+                if (finalHeight > maxHeight) {
+                  finalHeight = maxHeight
+                  finalWidth = maxHeight / aspectRatio
+                }
+
+                const xPos = xStartPos + (photoWidth - finalWidth) / 2
+                const yPos = yPosition
+
+                // Adicional validación de página
+                if (yPos + finalHeight > pageHeight - 20) {
+                  doc.addPage()
+                  yPosition = 20
+                }
+
+                doc.addImage(optimizedImage.dataUrl, "JPEG", xPos, yPos, finalWidth, finalHeight)
+
+                doc.setDrawColor(...COLORS.primary)
+                doc.setLineWidth(0.4)
+                doc.rect(xPos, yPos, finalWidth, finalHeight)
+
+                doc.setFontSize(7)
+                doc.setTextColor(...COLORS.text)
+                doc.text(`${j + 1}/${hallazgo.fotos.length}`, xPos + finalWidth / 2, yPos + finalHeight + 3, {
+                  align: "center",
+                })
+
+                xStartPos += photoWidth + photoSpacing
+                photoIndex++
+              } catch (error) {
+                console.error("[v0] Error agregando imagen al PDF:", error)
+                photoIndex++
               }
-
-              const col = j % colsPerRow
-              const row = Math.floor(j / colsPerRow)
-
-              const xPos = margin + photoPadding + col * (photoWidth + photoSpacing) + (photoWidth - finalWidth) / 2
-              const yPos = yPosition + row * (maxPhotoHeight + 12)
-
-              // Validar que no se corte la imagen
-              if (yPos + finalHeight > pageHeight - 20) {
-                doc.addPage()
-                yPosition = 20
-              }
-
-              doc.addImage(optimizedImage.dataUrl, "JPEG", xPos, yPos, finalWidth, finalHeight)
-
-              doc.setDrawColor(...COLORS.primary)
-              doc.setLineWidth(0.4)
-              doc.rect(xPos, yPos, finalWidth, finalHeight)
-
-              doc.setFontSize(7)
-              doc.setTextColor(...COLORS.text)
-              doc.text(`${j + 1}/${photoCount}`, xPos + finalWidth / 2, yPos + finalHeight + 3, {
-                align: "center",
-              })
-            } catch (error) {
-              console.error("[v0] Error agregando imagen al PDF:", error)
             }
-          }
 
-          // Calcular posición Y después del grid
-          const rowsNeeded = Math.ceil(photoCount / colsPerRow)
-          yPosition += rowsNeeded * (maxPhotoHeight + 12) + 5
+            yPosition += maxHeight + 8
+          }
+          yPosition += 3
         } else {
           doc.setFontSize(9)
           doc.setTextColor(150, 150, 150)
