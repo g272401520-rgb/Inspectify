@@ -1003,83 +1003,68 @@ export async function generateQuickInspectionPDF(data: {
           doc.setFont("helvetica", "normal")
           yPosition += 8
 
-          // Obtener aspect ratios de todas las imágenes
-          const photoAspectRatios = hallazgo.fotos.map((photoUrl) => {
-            const img = imageCache.get(photoUrl)
-            if (!img) return 0
-            return img.height / img.width
-          })
-
-          // Detectar orientaciones: < 0.7 = horizontal, > 1.4 = vertical, resto = cuadrado
-          const isHorizontal = (ratio: number) => ratio < 0.7
-          const isVertical = (ratio: number) => ratio > 1.4
-
+          const photoCount = hallazgo.fotos.length
           const photoPadding = 8
-          const photoSpacing = 12
+          const photoSpacing = 10
           const availableWidth = contentWidth - 2 * photoPadding
-          const maxHeight = 90
+          const maxPhotoHeight = 95
 
-          let photoIndex = 0
+          // Determinar distribución según cantidad de fotos
+          let layouts: number[][] = []
 
-          while (photoIndex < hallazgo.fotos.length) {
-            // Verificar espacio disponible en página actual
-            const minHeightNeeded = maxHeight + 10
-            if (yPosition + minHeightNeeded > pageHeight - 20) {
+          if (photoCount === 1) {
+            // 1 foto: centrada, ocupar máximo espacio
+            layouts = [[0]]
+          } else if (photoCount === 2) {
+            // 2 fotos: 2 columnas
+            layouts = [[0, 1]]
+          } else if (photoCount === 3) {
+            // 3 fotos: primera centrada en página actual, luego 2 en segunda página
+            layouts = [[0], [1, 2]]
+          } else if (photoCount === 4) {
+            // 4 fotos: 2 columnas en página 1, 2 columnas en página 2
+            layouts = [[0, 1], [2, 3]]
+          } else {
+            // 5+ fotos: distribuir de 2 en 2
+            for (let i = 0; i < photoCount; i += 2) {
+              layouts.push([i, i + 1 < photoCount ? i + 1 : -1].filter((idx) => idx >= 0))
+            }
+          }
+
+          // Renderizar cada layout (fila de fotos)
+          for (let layoutIdx = 0; layoutIdx < layouts.length; layoutIdx++) {
+            const layout = layouts[layoutIdx]
+
+            // Si no es la primera fila, agregar página nueva
+            if (layoutIdx > 0) {
               doc.addPage()
               yPosition = 20
             }
 
-            const currentRatio = photoAspectRatios[photoIndex]
-            const nextRatio = photoIndex + 1 < hallazgo.fotos.length ? photoAspectRatios[photoIndex + 1] : 0
+            // Validar espacio disponible
+            if (yPosition + maxPhotoHeight > pageHeight - 20) {
+              doc.addPage()
+              yPosition = 20
+            }
 
-            // Determinar layout para esta fila
-            let rowPhotos: number[] = []
-            let rowHeight = maxHeight
-            let photosToAdvance = 1 // Por defecto, avanzar 1 foto
+            const colsInLayout = layout.length
 
-            if (hallazgo.fotos.length === 1) {
-              // Una foto: ocupar máximo ancho
-              rowPhotos = [photoIndex]
-              photosToAdvance = 1
-            } else if (hallazgo.fotos.length === 2) {
-              // Dos fotos
-              if (isHorizontal(currentRatio) && isVertical(nextRatio)) {
-                // Horizontal + Vertical: horizontal grande, vertical pequeña
-                rowPhotos = [photoIndex, photoIndex + 1]
-                photosToAdvance = 2
-              } else if (isVertical(currentRatio) && isHorizontal(nextRatio)) {
-                // Vertical + Horizontal: vertical pequeña, horizontal grande
-                rowPhotos = [photoIndex, photoIndex + 1]
-                photosToAdvance = 2
-              } else {
-                // Mismo tipo: 1 x 2 o 2 x 1
-                rowPhotos = [photoIndex]
-                photosToAdvance = 1
-              }
-            } else if (hallazgo.fotos.length >= 3) {
-              // Tres o más fotos
-              if (photoIndex === 0 && isHorizontal(currentRatio) && isVertical(nextRatio)) {
-                // Primera es horizontal, segunda es vertical
-                rowPhotos = [photoIndex, photoIndex + 1]
-                photosToAdvance = 2
-              } else if (photoIndex === 0 && isVertical(currentRatio) && isHorizontal(nextRatio)) {
-                // Primera es vertical, segunda es horizontal
-                rowPhotos = [photoIndex, photoIndex + 1]
-                photosToAdvance = 2
-              } else {
-                // Una sola foto en esta fila
-                rowPhotos = [photoIndex]
-                photosToAdvance = 1
-              }
+            // Calcular ancho de cada foto
+            let photoWidth: number
+            if (colsInLayout === 1) {
+              // Una foto: usar máximo ancho disponible
+              photoWidth = availableWidth
+            } else {
+              // Dos fotos: dividir ancho
+              photoWidth = (availableWidth - photoSpacing) / 2
             }
 
             // Renderizar fotos de esta fila
-            const colsInRow = rowPhotos.length
             let xStartPos = margin + photoPadding
 
-            for (let idx = 0; idx < rowPhotos.length; idx++) {
-              const j = rowPhotos[idx]
-              const photoUrl = hallazgo.fotos[j]
+            for (let idx = 0; idx < layout.length; idx++) {
+              const photoIdx = layout[idx]
+              const photoUrl = hallazgo.fotos[photoIdx]
               const optimizedImage = imageCache.get(photoUrl)
 
               if (!optimizedImage) {
@@ -1087,63 +1072,36 @@ export async function generateQuickInspectionPDF(data: {
               }
 
               try {
-                const aspectRatio = photoAspectRatios[j]
+                const aspectRatio = optimizedImage.height / optimizedImage.width
 
                 if (!aspectRatio || isNaN(aspectRatio) || aspectRatio <= 0) {
                   continue
                 }
 
-                // Calcular ancho dinámico basado en tipo de foto
-                let photoWidth: number
-                if (colsInRow === 1) {
-                  photoWidth = availableWidth
-                } else if (colsInRow === 2) {
-                  // Dos fotos: distribuir inteligentemente
-                  if (isHorizontal(aspectRatio) && isVertical(photoAspectRatios[rowPhotos[1 - idx]])) {
-                    // Foto horizontal ocupa 60%, vertical ocupa 40%
-                    photoWidth = isHorizontal(aspectRatio) 
-                      ? (availableWidth - photoSpacing) * 0.6 
-                      : (availableWidth - photoSpacing) * 0.4
-                  } else if (isVertical(aspectRatio) && isHorizontal(photoAspectRatios[rowPhotos[1 - idx]])) {
-                    // Foto vertical ocupa 40%, horizontal ocupa 60%
-                    photoWidth = isVertical(aspectRatio) 
-                      ? (availableWidth - photoSpacing) * 0.4 
-                      : (availableWidth - photoSpacing) * 0.6
-                  } else {
-                    // Mismo tipo: mitad y mitad
-                    photoWidth = (availableWidth - photoSpacing) / 2
-                  }
-                } else {
-                  // Más de 2 columnas
-                  photoWidth = (availableWidth - (colsInRow - 1) * photoSpacing) / colsInRow
-                }
-
                 let finalWidth = photoWidth
                 let finalHeight = photoWidth * aspectRatio
 
-                if (finalHeight > maxHeight) {
-                  finalHeight = maxHeight
-                  finalWidth = maxHeight / aspectRatio
+                // Limitar altura máxima
+                if (finalHeight > maxPhotoHeight) {
+                  finalHeight = maxPhotoHeight
+                  finalWidth = maxPhotoHeight / aspectRatio
                 }
 
+                // Centrar foto dentro de su espacio
                 const xPos = xStartPos + (photoWidth - finalWidth) / 2
                 const yPos = yPosition
 
-                // Adicional validación de página
-                if (yPos + finalHeight > pageHeight - 20) {
-                  doc.addPage()
-                  yPosition = 20
-                }
-
                 doc.addImage(optimizedImage.dataUrl, "JPEG", xPos, yPos, finalWidth, finalHeight)
 
+                // Marco
                 doc.setDrawColor(...COLORS.primary)
                 doc.setLineWidth(0.4)
                 doc.rect(xPos, yPos, finalWidth, finalHeight)
 
+                // Numeración
                 doc.setFontSize(7)
                 doc.setTextColor(...COLORS.text)
-                doc.text(`${j + 1}/${hallazgo.fotos.length}`, xPos + finalWidth / 2, yPos + finalHeight + 3, {
+                doc.text(`${photoIdx + 1}/${photoCount}`, xPos + finalWidth / 2, yPos + finalHeight + 3, {
                   align: "center",
                 })
 
@@ -1153,10 +1111,9 @@ export async function generateQuickInspectionPDF(data: {
               }
             }
 
-            // Avanzar al siguiente set de fotos
-            photoIndex += photosToAdvance
-            yPosition += maxHeight + 8
+            yPosition += maxPhotoHeight + 8
           }
+
           yPosition += 3
         } else {
           doc.setFontSize(9)
