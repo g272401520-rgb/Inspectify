@@ -774,31 +774,38 @@ export async function generateQuickInspectionPDF(data: {
   console.log("[v0] generateQuickInspectionPDF: Generando PDF para INSPECCIÓN RÁPIDA...")
   console.log("[v0] ✓ Confirmado: PDF generado SOLO por solicitud manual del usuario")
   console.log("[v0] ✓ No hay generación automática")
-    const doc = new jsPDF()
+    const doc = new jsPDF({ orientation: "landscape", format: "a4" })
 
-    let yPosition = 20
+    // Obtener dimensiones dinámicas
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const margin = 15
+    const contentWidth = pageWidth - 2 * margin
 
+    let yPosition = 15
+
+    // Encabezado
     doc.setFillColor(...COLORS.primary)
-    doc.rect(0, 0, 210, 40, "F")
+    doc.rect(0, 0, pageWidth, 35, "F")
 
-    doc.setFontSize(24)
+    doc.setFontSize(22)
     doc.setTextColor(...COLORS.white)
-    doc.text("INFORME DE INSPECCIÓN", 105, 20, { align: "center" })
+    doc.text("INFORME DE INSPECCIÓN", pageWidth / 2, 12, { align: "center" })
 
     doc.setFontSize(10)
     doc.setTextColor(200, 200, 200)
-    doc.text("Inspectify - Gestión de Calidad", 105, 30, { align: "center" })
+    doc.text("Inspectify - Gestión de Calidad", pageWidth / 2, 22, { align: "center" })
 
-    yPosition = 50
+    yPosition = 40
 
     doc.setFillColor(...COLORS.accent)
-    doc.rect(15, yPosition, 180, 8, "F")
-    doc.setFontSize(14)
+    doc.rect(margin, yPosition, contentWidth, 8, "F")
+    doc.setFontSize(13)
     doc.setTextColor(...COLORS.white)
     doc.setFont("helvetica", "bold")
-    doc.text("1. RESUMEN DE LA INSPECCIÓN", 20, yPosition + 5.5)
+    doc.text("1. RESUMEN DE LA INSPECCIÓN", margin + 5, yPosition + 5.5)
     doc.setFont("helvetica", "normal")
-    yPosition += 13
+    yPosition += 12
 
     const summaryData = [
       ["Área", data.lugar],
@@ -828,27 +835,27 @@ export async function generateQuickInspectionPDF(data: {
         textColor: COLORS.text,
       },
       columnStyles: {
-        0: { fontStyle: "bold", cellWidth: 45, textColor: COLORS.primary },
+        0: { fontStyle: "bold", cellWidth: 50, textColor: COLORS.primary },
         1: { cellWidth: "auto" },
       },
-      margin: { left: 15, right: 15 },
+      margin: { left: margin, right: margin },
     })
 
-    yPosition = (doc as any).lastAutoTable.finalY + 15
+    yPosition = (doc as any).lastAutoTable.finalY + 10
 
-    if (yPosition > 210) {
+    if (yPosition > pageHeight - 20) {
       doc.addPage()
       yPosition = 20
     }
 
     doc.setFillColor(...COLORS.primary)
-    doc.rect(15, yPosition, 180, 8, "F")
+    doc.rect(margin, yPosition, contentWidth, 8, "F")
     doc.setFontSize(12)
     doc.setTextColor(...COLORS.white)
     doc.setFont("helvetica", "bold")
-    doc.text("2.1 Resumen de Cumplimiento", 20, yPosition + 5.5)
+    doc.text("2.1 Resumen de Cumplimiento", margin + 5, yPosition + 5.5)
     doc.setFont("helvetica", "normal")
-    yPosition += 13
+    yPosition += 12
 
     const hallazgosFotos = data.hallazgos.reduce((sum, h) => sum + h.fotos.length, 0)
     const totalFotos = data.evidencias.length + hallazgosFotos
@@ -856,10 +863,10 @@ export async function generateQuickInspectionPDF(data: {
     const noConformeCount = hallazgosFotos
     const compliancePercentage = totalFotos > 0 ? (conformeCount / totalFotos) * 100 : 100
 
-    const centerX = 105 // Centrado en página de 210mm
-    const centerY = yPosition + 30
-    const outerRadius = 25
-    const innerRadius = 15
+    const centerX = pageWidth / 2
+    const centerY = yPosition + 25
+    const outerRadius = 22
+    const innerRadius = 13
 
     const conformeAngle = totalFotos > 0 ? (conformeCount / totalFotos) * 360 : 0
     const noConformeAngle = totalFotos > 0 ? (noConformeCount / totalFotos) * 360 : 0
@@ -872,21 +879,21 @@ export async function generateQuickInspectionPDF(data: {
       drawDonutSlice(doc, centerX, centerY, outerRadius, innerRadius, conformeAngle, conformeAngle + noConformeAngle)
     }
 
-    doc.setFillColor(255, 255, 255) // Blanco
+    doc.setFillColor(255, 255, 255)
     doc.circle(centerX, centerY, innerRadius, "F")
 
     doc.setFontSize(16)
     doc.setFont("helvetica", "bold")
-    doc.setTextColor(34, 197, 94) // Verde #22c55e
+    doc.setTextColor(34, 197, 94)
     doc.text(`${compliancePercentage.toFixed(0)}%`, centerX, centerY + 2, { align: "center" })
     doc.setFont("helvetica", "normal")
 
-    const legendStartX = centerX - 40 // Centrar leyenda
-    const legendY = yPosition + 65
+    const legendStartX = centerX - 60
+    const legendY = yPosition + 55
 
     doc.setFillColor(...COLORS.conforme)
     doc.rect(legendStartX, legendY, 6, 6, "F")
-    doc.setFontSize(11)
+    doc.setFontSize(10)
     doc.setFont("helvetica", "bold")
     doc.setTextColor(...COLORS.text)
     doc.text(
@@ -896,28 +903,28 @@ export async function generateQuickInspectionPDF(data: {
     )
 
     doc.setFillColor(...COLORS.noConforme)
-    doc.rect(legendStartX, legendY + 10, 6, 6, "F")
+    doc.rect(legendStartX, legendY + 9, 6, 6, "F")
     doc.text(
       `No Conforme: ${noConformeCount} ${noConformeCount === 1 ? "criterio" : "criterios"} (${totalFotos > 0 ? ((noConformeCount / totalFotos) * 100).toFixed(1) : 0}%)`,
       legendStartX + 10,
-      legendY + 14.5,
+      legendY + 13.5,
     )
     doc.setFont("helvetica", "normal")
 
-    yPosition += 85
+    yPosition += 70
 
     if (data.hallazgos.length > 0) {
       doc.addPage()
       yPosition = 20
 
       doc.setFillColor(...COLORS.accent)
-      doc.rect(15, yPosition, 180, 8, "F")
-      doc.setFontSize(14)
+      doc.rect(margin, yPosition, contentWidth, 8, "F")
+      doc.setFontSize(13)
       doc.setTextColor(...COLORS.white)
       doc.setFont("helvetica", "bold")
-      doc.text("3. HALLAZGOS NO CONFORMES", 20, yPosition + 5.5)
+      doc.text("3. HALLAZGOS NO CONFORMES", margin + 5, yPosition + 5.5)
       doc.setFont("helvetica", "normal")
-      yPosition += 15
+      yPosition += 12
 
       console.log("[v0] Optimizando imágenes...")
       const imageCache = new Map<string, { dataUrl: string; width: number; height: number } | null>()
@@ -950,160 +957,11 @@ export async function generateQuickInspectionPDF(data: {
 
         const hallazgoNumber = String(data.hallazgos.indexOf(hallazgo) + 1).padStart(2, "0")
         doc.setFillColor(...COLORS.primary)
-        const headerHeight = hallazgo.fotos.length > 0 ? 10 : 8
-        doc.rect(15, yPosition, 180, headerHeight, "F")
+        doc.rect(margin, yPosition, contentWidth, 8, "F")
         doc.setFontSize(12)
         doc.setTextColor(...COLORS.white)
         doc.setFont("helvetica", "bold")
-        doc.text(`Hallazgo ${hallazgoNumber}`, 105, yPosition + headerHeight / 2 + 2, { align: "center" })
-        doc.setFont("helvetica", "normal")
-        yPosition += hallazgo.fotos.length > 0 ? 15 : 12
-
-        const findingData = [
-          ["Criterio", "Hallazgo Identificado"],
-          ["Descripción", hallazgo.descripcion || "Sin descripción"],
-        ]
-
-        autoTable(doc, {
-          startY: yPosition,
-          head: [],
-          body: findingData,
-          theme: "grid",
-          styles: {
-            fontSize: 10,
-            cellPadding: hallazgo.fotos.length > 0 ? 4 : 3,
-            textColor: COLORS.text,
-          },
-          columnStyles: {
-            0: {
-              fontStyle: "bold",
-              cellWidth: 35,
-              textColor: COLORS.primary,
-              fillColor: COLORS.lightGray,
-            },
-            1: { cellWidth: "auto" },
-          },
-          margin: { left: 15, right: 15 },
-          pageBreak: "auto",
-          showHead: "firstPage",
-        })
-
-        yPosition = (doc as any).lastAutoTable.finalY + 10
-
-        if (hallazgo.fotos.length > 0) {
-          doc.setFontSize(10)
-          doc.setFont("helvetica", "bold")
-          doc.setTextColor(...COLORS.primary)
-          doc.text("Evidencia Fotográfica:", 105, yPosition, { align: "center" })
-          doc.setFont("helvetica", "normal")
-          yPosition += 8
-
-          const pageWidth = 210
-          const margin = 20
-          const photoWidth = pageWidth - 2 * margin
-          const maxPhotoHeight = 110
-          const photoSpacing = 15
-
-          for (let j = 0; j < hallazgo.fotos.length; j++) {
-            const photoUrl = hallazgo.fotos[j]
-            const optimizedImage = imageCache.get(photoUrl)
-
-            if (!optimizedImage) {
-              doc.setFontSize(9)
-              doc.setTextColor(150, 150, 150)
-              doc.text("Error al cargar imagen", 105, yPosition + 20, { align: "center" })
-              yPosition += 40
-              continue
-            }
-
-            try {
-              const aspectRatio = optimizedImage.height / optimizedImage.width
-
-              if (!aspectRatio || isNaN(aspectRatio) || aspectRatio <= 0) {
-                console.error("[v0] Aspect ratio inválido:", aspectRatio)
-                doc.setFontSize(9)
-                doc.setTextColor(150, 150, 150)
-                doc.text("Error: dimensiones inválidas", 105, yPosition + 20, { align: "center" })
-                yPosition += 40
-                continue
-              }
-
-              let finalWidth = photoWidth
-              let finalHeight = photoWidth * aspectRatio
-
-              if (finalHeight > maxPhotoHeight) {
-                finalHeight = maxPhotoHeight
-                finalWidth = maxPhotoHeight / aspectRatio
-              }
-
-              if (yPosition + finalHeight > 270) {
-                doc.addPage()
-                yPosition = 20
-              }
-
-              const xPos = margin + (photoWidth - finalWidth) / 2
-
-              doc.addImage(optimizedImage.dataUrl, "JPEG", xPos, yPosition, finalWidth, finalHeight)
-
-              doc.setDrawColor(...COLORS.primary)
-              doc.setLineWidth(0.5)
-              doc.rect(xPos, yPosition, finalWidth, finalHeight)
-
-              doc.setFontSize(8)
-              doc.setTextColor(...COLORS.text)
-              doc.text(`Foto ${j + 1} de ${hallazgo.fotos.length}`, 105, yPosition + finalHeight + 4, {
-                align: "center",
-              })
-
-              yPosition += finalHeight + photoSpacing
-            } catch (error) {
-              console.error("[v0] Error agregando imagen al PDF:", error)
-              doc.setFontSize(9)
-              doc.setTextColor(150, 150, 150)
-              doc.text("Error al procesar imagen", 105, yPosition + 20, { align: "center" })
-              yPosition += 40
-            }
-          }
-        } else {
-          doc.setFontSize(9)
-          doc.setTextColor(150, 150, 150)
-          doc.text("Sin evidencia fotográfica", 105, yPosition, { align: "center" })
-          yPosition += 8
-        }
-
-        if (i < findingsWithPhotos.length - 1) {
-          if (hallazgo.fotos.length === 0) {
-            yPosition += 3
-          } else {
-            yPosition += 10
-          }
-        }
-      }
-
-      for (let i = 0; i < findingsWithoutPhotos.length; i++) {
-        const hallazgo = findingsWithoutPhotos[i]
-
-        const estimatedHeight = 90
-
-        if ((i === 0 && findingsWithPhotos.length > 0) || yPosition + estimatedHeight > 270) {
-          const remainingFindings = findingsWithoutPhotos.length - i
-
-          if (remainingFindings <= 2 && yPosition + estimatedHeight * remainingFindings > 270) {
-            doc.addPage()
-            yPosition = 20
-          } else if (yPosition + estimatedHeight > 270) {
-            doc.addPage()
-            yPosition = 20
-          }
-        }
-
-        const hallazgoNumber = String(data.hallazgos.indexOf(hallazgo) + 1).padStart(2, "0")
-        doc.setFillColor(...COLORS.primary)
-        doc.rect(15, yPosition, 180, 8, "F")
-        doc.setFontSize(12)
-        doc.setTextColor(...COLORS.white)
-        doc.setFont("helvetica", "bold")
-        doc.text(`Hallazgo ${hallazgoNumber}`, 105, yPosition + 5.5, { align: "center" })
+        doc.text(`Hallazgo ${hallazgoNumber}`, pageWidth / 2, yPosition + 5.5, { align: "center" })
         doc.setFont("helvetica", "normal")
         yPosition += 12
 
@@ -1125,13 +983,169 @@ export async function generateQuickInspectionPDF(data: {
           columnStyles: {
             0: {
               fontStyle: "bold",
-              cellWidth: 35,
+              cellWidth: 50,
               textColor: COLORS.primary,
               fillColor: COLORS.lightGray,
             },
             1: { cellWidth: "auto" },
           },
-          margin: { left: 15, right: 15 },
+          margin: { left: margin, right: margin },
+          pageBreak: "auto",
+          showHead: "firstPage",
+        })
+
+        yPosition = (doc as any).lastAutoTable.finalY + 8
+
+        if (hallazgo.fotos.length > 0) {
+          doc.setFontSize(10)
+          doc.setFont("helvetica", "bold")
+          doc.setTextColor(...COLORS.primary)
+          doc.text("Evidencia Fotográfica:", pageWidth / 2, yPosition, { align: "center" })
+          doc.setFont("helvetica", "normal")
+          yPosition += 8
+
+          // Grid dinámico de fotos según cantidad
+          const photoCount = hallazgo.fotos.length
+          let colsPerRow = 3
+          if (photoCount === 1) {
+            colsPerRow = 1
+          } else if (photoCount === 2) {
+            colsPerRow = 2
+          } else if (photoCount === 3) {
+            colsPerRow = 3
+          } else if (photoCount === 4) {
+            colsPerRow = 2
+          } else if (photoCount >= 5) {
+            colsPerRow = 3
+          }
+
+          const photoPadding = 8
+          const availableWidth = contentWidth - 2 * photoPadding
+          const photoWidth = (availableWidth - (colsPerRow - 1) * 5) / colsPerRow
+          const maxPhotoHeight = 50
+
+          for (let j = 0; j < hallazgo.fotos.length; j++) {
+            const photoUrl = hallazgo.fotos[j]
+            const optimizedImage = imageCache.get(photoUrl)
+
+            if (!optimizedImage) {
+              doc.setFontSize(8)
+              doc.setTextColor(150, 150, 150)
+              doc.text("Error", margin + photoPadding + (j % colsPerRow) * (photoWidth + 5), yPosition + 20)
+              continue
+            }
+
+            try {
+              const aspectRatio = optimizedImage.height / optimizedImage.width
+
+              if (!aspectRatio || isNaN(aspectRatio) || aspectRatio <= 0) {
+                console.error("[v0] Aspect ratio inválido:", aspectRatio)
+                continue
+              }
+
+              let finalWidth = photoWidth
+              let finalHeight = photoWidth * aspectRatio
+
+              if (finalHeight > maxPhotoHeight) {
+                finalHeight = maxPhotoHeight
+                finalWidth = maxPhotoHeight / aspectRatio
+              }
+
+              const col = j % colsPerRow
+              const row = Math.floor(j / colsPerRow)
+
+              const xPos = margin + photoPadding + col * (photoWidth + 5) + (photoWidth - finalWidth) / 2
+              const yPos = yPosition + row * (maxPhotoHeight + 10)
+
+              // Validar que no se corte la imagen
+              if (yPos + finalHeight > pageHeight - 20) {
+                doc.addPage()
+                yPosition = 20
+              }
+
+              doc.addImage(optimizedImage.dataUrl, "JPEG", xPos, yPos, finalWidth, finalHeight)
+
+              doc.setDrawColor(...COLORS.primary)
+              doc.setLineWidth(0.4)
+              doc.rect(xPos, yPos, finalWidth, finalHeight)
+
+              doc.setFontSize(7)
+              doc.setTextColor(...COLORS.text)
+              doc.text(`${j + 1}/${photoCount}`, xPos + finalWidth / 2, yPos + finalHeight + 3, {
+                align: "center",
+              })
+            } catch (error) {
+              console.error("[v0] Error agregando imagen al PDF:", error)
+            }
+          }
+
+          // Calcular posición Y después del grid
+          const rowsNeeded = Math.ceil(photoCount / colsPerRow)
+          yPosition += rowsNeeded * (maxPhotoHeight + 10) + 5
+        } else {
+          doc.setFontSize(9)
+          doc.setTextColor(150, 150, 150)
+          doc.text("Sin evidencia fotográfica", pageWidth / 2, yPosition, { align: "center" })
+          yPosition += 8
+        }
+
+        if (i < findingsWithPhotos.length - 1) {
+          yPosition += 5
+        }
+      }
+
+      for (let i = 0; i < findingsWithoutPhotos.length; i++) {
+        const hallazgo = findingsWithoutPhotos[i]
+
+        const estimatedHeight = 60
+
+        if ((i === 0 && findingsWithPhotos.length > 0) || yPosition + estimatedHeight > pageHeight - 20) {
+          const remainingFindings = findingsWithoutPhotos.length - i
+
+          if (remainingFindings <= 2 && yPosition + estimatedHeight * remainingFindings > pageHeight - 20) {
+            doc.addPage()
+            yPosition = 20
+          } else if (yPosition + estimatedHeight > pageHeight - 20) {
+            doc.addPage()
+            yPosition = 20
+          }
+        }
+
+        const hallazgoNumber = String(data.hallazgos.indexOf(hallazgo) + 1).padStart(2, "0")
+        doc.setFillColor(...COLORS.primary)
+        doc.rect(margin, yPosition, contentWidth, 8, "F")
+        doc.setFontSize(12)
+        doc.setTextColor(...COLORS.white)
+        doc.setFont("helvetica", "bold")
+        doc.text(`Hallazgo ${hallazgoNumber}`, pageWidth / 2, yPosition + 5.5, { align: "center" })
+        doc.setFont("helvetica", "normal")
+        yPosition += 12
+
+        const findingData = [
+          ["Criterio", "Hallazgo Identificado"],
+          ["Descripción", hallazgo.descripcion || "Sin descripción"],
+        ]
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [],
+          body: findingData,
+          theme: "grid",
+          styles: {
+            fontSize: 10,
+            cellPadding: 3,
+            textColor: COLORS.text,
+          },
+          columnStyles: {
+            0: {
+              fontStyle: "bold",
+              cellWidth: 50,
+              textColor: COLORS.primary,
+              fillColor: COLORS.lightGray,
+            },
+            1: { cellWidth: "auto" },
+          },
+          margin: { left: margin, right: margin },
           pageBreak: "avoid",
           showHead: "firstPage",
         })
@@ -1140,7 +1154,7 @@ export async function generateQuickInspectionPDF(data: {
 
         doc.setFontSize(9)
         doc.setTextColor(150, 150, 150)
-        doc.text("Sin evidencia fotográfica", 105, yPosition, { align: "center" })
+        doc.text("Sin evidencia fotográfica", pageWidth / 2, yPosition, { align: "center" })
         yPosition += 8
 
         if (i < findingsWithoutPhotos.length - 1) {
@@ -1154,7 +1168,7 @@ export async function generateQuickInspectionPDF(data: {
       doc.setPage(i)
       doc.setFontSize(8)
       doc.setTextColor(150, 150, 150)
-      doc.text(`Página ${i} de ${pageCount} | Generado el ${new Date().toLocaleDateString("es-ES")}`, 105, 290, {
+      doc.text(`Página ${i} de ${pageCount} | Generado el ${new Date().toLocaleDateString("es-ES")}`, pageWidth / 2, pageHeight - 10, {
         align: "center",
       })
     }
