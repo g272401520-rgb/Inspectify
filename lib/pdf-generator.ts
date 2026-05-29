@@ -1035,37 +1035,41 @@ export async function generateQuickInspectionPDF(data: {
             // Determinar layout para esta fila
             let rowPhotos: number[] = []
             let rowHeight = maxHeight
+            let photosToAdvance = 1 // Por defecto, avanzar 1 foto
 
             if (hallazgo.fotos.length === 1) {
               // Una foto: ocupar máximo ancho
               rowPhotos = [photoIndex]
+              photosToAdvance = 1
             } else if (hallazgo.fotos.length === 2) {
               // Dos fotos
               if (isHorizontal(currentRatio) && isVertical(nextRatio)) {
                 // Horizontal + Vertical: horizontal grande, vertical pequeña
                 rowPhotos = [photoIndex, photoIndex + 1]
-                photoIndex += 2
+                photosToAdvance = 2
               } else if (isVertical(currentRatio) && isHorizontal(nextRatio)) {
                 // Vertical + Horizontal: vertical pequeña, horizontal grande
                 rowPhotos = [photoIndex, photoIndex + 1]
-                photoIndex += 2
+                photosToAdvance = 2
               } else {
                 // Mismo tipo: 1 x 2 o 2 x 1
                 rowPhotos = [photoIndex]
+                photosToAdvance = 1
               }
             } else if (hallazgo.fotos.length >= 3) {
               // Tres o más fotos
               if (photoIndex === 0 && isHorizontal(currentRatio) && isVertical(nextRatio)) {
                 // Primera es horizontal, segunda es vertical
                 rowPhotos = [photoIndex, photoIndex + 1]
-                photoIndex += 2
+                photosToAdvance = 2
               } else if (photoIndex === 0 && isVertical(currentRatio) && isHorizontal(nextRatio)) {
                 // Primera es vertical, segunda es horizontal
                 rowPhotos = [photoIndex, photoIndex + 1]
-                photoIndex += 2
+                photosToAdvance = 2
               } else {
                 // Una sola foto en esta fila
                 rowPhotos = [photoIndex]
+                photosToAdvance = 1
               }
             }
 
@@ -1079,7 +1083,6 @@ export async function generateQuickInspectionPDF(data: {
               const optimizedImage = imageCache.get(photoUrl)
 
               if (!optimizedImage) {
-                photoIndex++
                 continue
               }
 
@@ -1087,7 +1090,6 @@ export async function generateQuickInspectionPDF(data: {
                 const aspectRatio = photoAspectRatios[j]
 
                 if (!aspectRatio || isNaN(aspectRatio) || aspectRatio <= 0) {
-                  photoIndex++
                   continue
                 }
 
@@ -1146,13 +1148,13 @@ export async function generateQuickInspectionPDF(data: {
                 })
 
                 xStartPos += photoWidth + photoSpacing
-                photoIndex++
               } catch (error) {
                 console.error("[v0] Error agregando imagen al PDF:", error)
-                photoIndex++
               }
             }
 
+            // Avanzar al siguiente set de fotos
+            photoIndex += photosToAdvance
             yPosition += maxHeight + 8
           }
           yPosition += 3
