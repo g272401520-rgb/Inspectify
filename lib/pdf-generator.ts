@@ -841,16 +841,6 @@ export async function generateQuickInspectionPDF(data: {
       yPosition = 20
     }
 
-      doc.setFillColor(...COLORS.accent)
-      doc.rect(15, yPosition, 180, 8, "F")
-      doc.setFontSize(14)
-      doc.setTextColor(...COLORS.white)
-      doc.setFont("helvetica", "bold")
-      doc.text(`${sectionNumber}. TABLA DE REGISTROS`, 20, yPosition + 5.5)
-      doc.setFont("helvetica", "normal")
-      yPosition += 13
-      sectionNumber++
-
     doc.setFillColor(...COLORS.primary)
     doc.rect(15, yPosition, 180, 8, "F")
     doc.setFontSize(12)
