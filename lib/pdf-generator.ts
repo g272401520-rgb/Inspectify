@@ -385,24 +385,6 @@ export async function generateQuickInspectionPDF(data: {
   hallazgos: Array<{ descripcion: string; fotos: string[] }>
 }): Promise<void> {
   try {
-<<<<<<< HEAD
-  console.log("[v0] generateQuickInspectionPDF: Generando PDF para INSPECCIÓN RÁPIDA...")
-  console.log("[v0] ✓ Confirmado: PDF generado SOLO por solicitud manual del usuario")
-  console.log("[v0] ✓ No hay generación automática")
-    const doc = new jsPDF({ orientation: "landscape", format: "a4" })
-
-    // Obtener dimensiones dinámicas
-    const pageWidth = doc.internal.pageSize.getWidth()
-    const pageHeight = doc.internal.pageSize.getHeight()
-    const margin = 15
-    const contentWidth = pageWidth - 2 * margin
-
-    let yPosition = 15
-
-    // Encabezado
-    doc.setFillColor(...COLORS.primary)
-    doc.rect(0, 0, pageWidth, 35, "F")
-=======
     console.log("[v0] generateQuickInspectionPDF: Generando PDF OPTIMIZADO para INSPECCIÓN RÁPIDA (LANDSCAPE)...")
     console.log("[v0] ✓ Orientación: HORIZONTAL (297mm × 210mm)")
     console.log("[v0] ✓ Imágenes maximizadas: 277mm × 170mm")
@@ -421,40 +403,26 @@ export async function generateQuickInspectionPDF(data: {
     // HEADER
     doc.setFillColor(...COLORS.primary)
     doc.rect(0, 0, pageWidth, 40, "F")
->>>>>>> main
 
-    doc.setFontSize(22)
+    doc.setFontSize(24)
     doc.setTextColor(...COLORS.white)
-<<<<<<< HEAD
-    doc.text("INFORME DE INSPECCIÓN", pageWidth / 2, 12, { align: "center" })
-
-    doc.setFontSize(10)
-    doc.setTextColor(200, 200, 200)
-    doc.text("Inspectify - Gestión de Calidad", pageWidth / 2, 22, { align: "center" })
-=======
     doc.text("INFORME DE INSPECCIÓN", pageWidth / 2, 20, { align: "center" })
 
     doc.setFontSize(10)
     doc.setTextColor(200, 200, 200)
     doc.text("Inspectify - Gestión de Calidad", pageWidth / 2, 30, { align: "center" })
->>>>>>> main
 
-    yPosition = 40
+    yPosition = 50
 
     // SECCIÓN 1: RESUMEN
     doc.setFillColor(...COLORS.accent)
-<<<<<<< HEAD
-    doc.rect(margin, yPosition, contentWidth, 8, "F")
-    doc.setFontSize(13)
-=======
     doc.rect(15, yPosition, pageWidth - 30, 8, "F")
     doc.setFontSize(14)
->>>>>>> main
     doc.setTextColor(...COLORS.white)
     doc.setFont("helvetica", "bold")
-    doc.text("1. RESUMEN DE LA INSPECCIÓN", margin + 5, yPosition + 5.5)
+    doc.text("1. RESUMEN DE LA INSPECCIÓN", 20, yPosition + 5.5)
     doc.setFont("helvetica", "normal")
-    yPosition += 12
+    yPosition += 13
 
     const summaryData = [
       ["Área", data.lugar],
@@ -487,37 +455,25 @@ export async function generateQuickInspectionPDF(data: {
         0: { fontStyle: "bold", cellWidth: 50, textColor: COLORS.primary },
         1: { cellWidth: "auto" },
       },
-      margin: { left: margin, right: margin },
+      margin: { left: 15, right: 15 },
     })
 
-    yPosition = (doc as any).lastAutoTable.finalY + 10
+    yPosition = (doc as any).lastAutoTable.finalY + 15
 
-<<<<<<< HEAD
-    if (yPosition > pageHeight - 20) {
-=======
     if (yPosition > 160) {
->>>>>>> main
       doc.addPage()
       yPosition = 20
     }
 
     // SECCIÓN 2: GRÁFICO DE CUMPLIMIENTO
     doc.setFillColor(...COLORS.primary)
-<<<<<<< HEAD
-    doc.rect(margin, yPosition, contentWidth, 8, "F")
-    doc.setFontSize(12)
-    doc.setTextColor(...COLORS.white)
-    doc.setFont("helvetica", "bold")
-    doc.text("2.1 Resumen de Cumplimiento", margin + 5, yPosition + 5.5)
-=======
     doc.rect(15, yPosition, pageWidth - 30, 8, "F")
     doc.setFontSize(12)
     doc.setTextColor(...COLORS.white)
     doc.setFont("helvetica", "bold")
     doc.text("2. RESUMEN DE CUMPLIMIENTO", 20, yPosition + 5.5)
->>>>>>> main
     doc.setFont("helvetica", "normal")
-    yPosition += 12
+    yPosition += 13
 
     const hallazgosFotos = data.hallazgos.reduce((sum, h) => sum + h.fotos.length, 0)
     const totalFotos = data.evidencias.length + hallazgosFotos
@@ -526,15 +482,9 @@ export async function generateQuickInspectionPDF(data: {
     const compliancePercentage = totalFotos > 0 ? (conformeCount / totalFotos) * 100 : 100
 
     const centerX = pageWidth / 2
-<<<<<<< HEAD
-    const centerY = yPosition + 25
-    const outerRadius = 22
-    const innerRadius = 13
-=======
     const centerY = yPosition + 20
     const outerRadius = 20
     const innerRadius = 12
->>>>>>> main
 
     const conformeAngle = totalFotos > 0 ? (conformeCount / totalFotos) * 360 : 0
     const noConformeAngle = totalFotos > 0 ? (noConformeCount / totalFotos) * 360 : 0
@@ -556,13 +506,8 @@ export async function generateQuickInspectionPDF(data: {
     doc.text(`${compliancePercentage.toFixed(0)}%`, centerX, centerY + 2, { align: "center" })
     doc.setFont("helvetica", "normal")
 
-<<<<<<< HEAD
-    const legendStartX = centerX - 60
-    const legendY = yPosition + 55
-=======
     const legendStartX = centerX - 45
     const legendY = yPosition + 50
->>>>>>> main
 
     doc.setFillColor(...COLORS.conforme)
     doc.rect(legendStartX, legendY, 6, 6, "F")
@@ -576,19 +521,15 @@ export async function generateQuickInspectionPDF(data: {
     )
 
     doc.setFillColor(...COLORS.noConforme)
-    doc.rect(legendStartX, legendY + 9, 6, 6, "F")
+    doc.rect(legendStartX, legendY + 10, 6, 6, "F")
     doc.text(
       `No Conforme: ${noConformeCount} ${noConformeCount === 1 ? "foto" : "fotos"} (${totalFotos > 0 ? ((noConformeCount / totalFotos) * 100).toFixed(1) : 0}%)`,
       legendStartX + 10,
-      legendY + 13.5,
+      legendY + 14.5,
     )
     doc.setFont("helvetica", "normal")
 
-<<<<<<< HEAD
-    yPosition += 70
-=======
     yPosition += 60
->>>>>>> main
 
     // SECCIÓN 3: HALLAZGOS
     if (data.hallazgos.length > 0) {
@@ -598,18 +539,13 @@ export async function generateQuickInspectionPDF(data: {
       }
 
       doc.setFillColor(...COLORS.accent)
-<<<<<<< HEAD
-      doc.rect(margin, yPosition, contentWidth, 8, "F")
-      doc.setFontSize(13)
-=======
       doc.rect(15, yPosition, pageWidth - 30, 8, "F")
       doc.setFontSize(14)
->>>>>>> main
       doc.setTextColor(...COLORS.white)
       doc.setFont("helvetica", "bold")
-      doc.text("3. HALLAZGOS NO CONFORMES", margin + 5, yPosition + 5.5)
+      doc.text("3. HALLAZGOS NO CONFORMES", 20, yPosition + 5.5)
       doc.setFont("helvetica", "normal")
-      yPosition += 12
+      yPosition += 15
 
       console.log("[v0] Optimizando imágenes para PDF...")
       const imageCache = new Map<string, { dataUrl: string; width: number; height: number } | null>()
@@ -644,15 +580,6 @@ export async function generateQuickInspectionPDF(data: {
 
         const hallazgoNumber = String(data.hallazgos.indexOf(hallazgo) + 1).padStart(2, "0")
         doc.setFillColor(...COLORS.primary)
-<<<<<<< HEAD
-        doc.rect(margin, yPosition, contentWidth, 8, "F")
-        doc.setFontSize(12)
-        doc.setTextColor(...COLORS.white)
-        doc.setFont("helvetica", "bold")
-        doc.text(`Hallazgo ${hallazgoNumber}`, pageWidth / 2, yPosition + 5.5, { align: "center" })
-        doc.setFont("helvetica", "normal")
-        yPosition += 12
-=======
         doc.rect(15, yPosition, pageWidth - 30, 10, "F")
         doc.setFontSize(12)
         doc.setTextColor(...COLORS.white)
@@ -660,9 +587,9 @@ export async function generateQuickInspectionPDF(data: {
         doc.text(`Hallazgo ${hallazgoNumber}`, pageWidth / 2, yPosition + 6.5, { align: "center" })
         doc.setFont("helvetica", "normal")
         yPosition += 15
->>>>>>> main
 
         const findingData = [
+          ["Criterio", "Hallazgo Identificado"],
           ["Descripción", hallazgo.descripcion || "Sin descripción"],
         ]
 
@@ -673,11 +600,7 @@ export async function generateQuickInspectionPDF(data: {
           theme: "grid",
           styles: {
             fontSize: 10,
-<<<<<<< HEAD
-            cellPadding: 3,
-=======
             cellPadding: 4,
->>>>>>> main
             textColor: COLORS.text,
           },
           columnStyles: {
@@ -689,12 +612,12 @@ export async function generateQuickInspectionPDF(data: {
             },
             1: { cellWidth: "auto" },
           },
-          margin: { left: margin, right: margin },
+          margin: { left: 15, right: 15 },
           pageBreak: "auto",
           showHead: "firstPage",
         })
 
-        yPosition = (doc as any).lastAutoTable.finalY + 8
+        yPosition = (doc as any).lastAutoTable.finalY + 10
 
         if (hallazgo.fotos.length > 0) {
           doc.setFontSize(10)
@@ -704,44 +627,6 @@ export async function generateQuickInspectionPDF(data: {
           doc.setFont("helvetica", "normal")
           yPosition += 8
 
-<<<<<<< HEAD
-          const photoCount = hallazgo.fotos.length
-          const photoPadding = 8
-          const photoSpacing = 10
-          const availableWidth = contentWidth - 2 * photoPadding
-          const maxPhotoHeight = 95
-
-          // Determinar distribución según cantidad de fotos
-          let layouts: number[][] = []
-
-          if (photoCount === 1) {
-            // 1 foto: centrada, ocupar máximo espacio
-            layouts = [[0]]
-          } else if (photoCount === 2) {
-            // 2 fotos: 2 columnas
-            layouts = [[0, 1]]
-          } else if (photoCount === 3) {
-            // 3 fotos: primera centrada en página actual, luego 2 en segunda página
-            layouts = [[0], [1, 2]]
-          } else if (photoCount === 4) {
-            // 4 fotos: 2 columnas en página 1, 2 columnas en página 2
-            layouts = [[0, 1], [2, 3]]
-          } else {
-            // 5+ fotos: distribuir de 2 en 2
-            for (let i = 0; i < photoCount; i += 2) {
-              layouts.push([i, i + 1 < photoCount ? i + 1 : -1].filter((idx) => idx >= 0))
-            }
-          }
-
-          // Renderizar cada layout (fila de fotos)
-          for (let layoutIdx = 0; layoutIdx < layouts.length; layoutIdx++) {
-            const layout = layouts[layoutIdx]
-
-            // Si no es la primera fila, agregar página nueva
-            if (layoutIdx > 0) {
-              doc.addPage()
-              yPosition = 20
-=======
           // ✅ DIMENSIONES OPTIMIZADAS PARA LANDSCAPE
           const margin = 10
           const photoWidth = pageWidth - 2 * margin    // 277mm ancho
@@ -759,88 +644,27 @@ export async function generateQuickInspectionPDF(data: {
               doc.text("Error al cargar imagen", pageWidth / 2, yPosition + 20, { align: "center" })
               yPosition += 40
               continue
->>>>>>> main
             }
 
-            // Validar espacio disponible
-            if (yPosition + maxPhotoHeight > pageHeight - 20) {
-              doc.addPage()
-              yPosition = 20
-            }
+            try {
+              const aspectRatio = optimizedImage.height / optimizedImage.width
 
-<<<<<<< HEAD
-            const colsInLayout = layout.length
-
-            // Calcular ancho de cada foto
-            let photoWidth: number
-            if (colsInLayout === 1) {
-              // Una foto: usar máximo ancho disponible
-              photoWidth = availableWidth
-            } else {
-              // Dos fotos: dividir ancho
-              photoWidth = (availableWidth - photoSpacing) / 2
-            }
-
-            // Renderizar fotos de esta fila
-            let xStartPos = margin + photoPadding
-
-            for (let idx = 0; idx < layout.length; idx++) {
-              const photoIdx = layout[idx]
-              const photoUrl = hallazgo.fotos[photoIdx]
-              const optimizedImage = imageCache.get(photoUrl)
-
-              if (!optimizedImage) {
-=======
               if (!aspectRatio || isNaN(aspectRatio) || aspectRatio <= 0) {
                 console.error("[v0] Aspect ratio inválido:", aspectRatio)
                 doc.setFontSize(9)
                 doc.setTextColor(150, 150, 150)
                 doc.text("Error: dimensiones inválidas", pageWidth / 2, yPosition + 20, { align: "center" })
                 yPosition += 40
->>>>>>> main
                 continue
               }
 
-              try {
-                const aspectRatio = optimizedImage.height / optimizedImage.width
+              let finalWidth = photoWidth
+              let finalHeight = photoWidth * aspectRatio
 
-                if (!aspectRatio || isNaN(aspectRatio) || aspectRatio <= 0) {
-                  continue
-                }
-
-                let finalWidth = photoWidth
-                let finalHeight = photoWidth * aspectRatio
-
-                // Limitar altura máxima
-                if (finalHeight > maxPhotoHeight) {
-                  finalHeight = maxPhotoHeight
-                  finalWidth = maxPhotoHeight / aspectRatio
-                }
-
-                // Centrar foto dentro de su espacio
-                const xPos = xStartPos + (photoWidth - finalWidth) / 2
-                const yPos = yPosition
-
-                doc.addImage(optimizedImage.dataUrl, "JPEG", xPos, yPos, finalWidth, finalHeight)
-
-                // Marco
-                doc.setDrawColor(...COLORS.primary)
-                doc.setLineWidth(0.4)
-                doc.rect(xPos, yPos, finalWidth, finalHeight)
-
-                // Numeración
-                doc.setFontSize(7)
-                doc.setTextColor(...COLORS.text)
-                doc.text(`${photoIdx + 1}/${photoCount}`, xPos + finalWidth / 2, yPos + finalHeight + 3, {
-                  align: "center",
-                })
-
-                xStartPos += photoWidth + photoSpacing
-              } catch (error) {
-                console.error("[v0] Error agregando imagen al PDF:", error)
+              if (finalHeight > maxPhotoHeight) {
+                finalHeight = maxPhotoHeight
+                finalWidth = maxPhotoHeight / aspectRatio
               }
-<<<<<<< HEAD
-=======
 
               // GESTIÓN DE SALTOS DE PÁGINA PARA LANDSCAPE
               if (yPosition + finalHeight > 200) {
@@ -872,26 +696,14 @@ export async function generateQuickInspectionPDF(data: {
               doc.setTextColor(150, 150, 150)
               doc.text("Error al procesar imagen", pageWidth / 2, yPosition + 20, { align: "center" })
               yPosition += 40
->>>>>>> main
             }
-
-            yPosition += maxPhotoHeight + 8
           }
-
-          yPosition += 3
         } else {
           doc.setFontSize(9)
           doc.setTextColor(150, 150, 150)
           doc.text("Sin evidencia fotográfica", pageWidth / 2, yPosition, { align: "center" })
           yPosition += 8
         }
-<<<<<<< HEAD
-
-        if (i < findingsWithPhotos.length - 1) {
-          yPosition += 5
-        }
-=======
->>>>>>> main
       }
 
       // Procesar hallazgos SIN fotos
@@ -901,37 +713,14 @@ export async function generateQuickInspectionPDF(data: {
           yPosition = 20
         }
 
-<<<<<<< HEAD
-        const estimatedHeight = 60
-
-        if ((i === 0 && findingsWithPhotos.length > 0) || yPosition + estimatedHeight > pageHeight - 20) {
-          const remainingFindings = findingsWithoutPhotos.length - i
-
-          if (remainingFindings <= 2 && yPosition + estimatedHeight * remainingFindings > pageHeight - 20) {
-            doc.addPage()
-            yPosition = 20
-          } else if (yPosition + estimatedHeight > pageHeight - 20) {
-=======
         for (let i = 0; i < findingsWithoutPhotos.length; i++) {
           const hallazgo = findingsWithoutPhotos[i]
 
           if (yPosition > 190) {
->>>>>>> main
             doc.addPage()
             yPosition = 20
           }
 
-<<<<<<< HEAD
-        const hallazgoNumber = String(data.hallazgos.indexOf(hallazgo) + 1).padStart(2, "0")
-        doc.setFillColor(...COLORS.primary)
-        doc.rect(margin, yPosition, contentWidth, 8, "F")
-        doc.setFontSize(12)
-        doc.setTextColor(...COLORS.white)
-        doc.setFont("helvetica", "bold")
-        doc.text(`Hallazgo ${hallazgoNumber}`, pageWidth / 2, yPosition + 5.5, { align: "center" })
-        doc.setFont("helvetica", "normal")
-        yPosition += 12
-=======
           const hallazgoNumber = String(data.hallazgos.indexOf(hallazgo) + 1).padStart(2, "0")
           doc.setFillColor(...COLORS.primary)
           doc.rect(15, yPosition, pageWidth - 30, 8, "F")
@@ -941,38 +730,12 @@ export async function generateQuickInspectionPDF(data: {
           doc.text(`Hallazgo ${hallazgoNumber}`, pageWidth / 2, yPosition + 5.5, { align: "center" })
           doc.setFont("helvetica", "normal")
           yPosition += 12
->>>>>>> main
 
           const findingData = [
             ["Criterio", "Hallazgo Identificado"],
             ["Descripción", hallazgo.descripcion || "Sin descripción"],
           ]
 
-<<<<<<< HEAD
-        autoTable(doc, {
-          startY: yPosition,
-          head: [],
-          body: findingData,
-          theme: "grid",
-          styles: {
-            fontSize: 10,
-            cellPadding: 3,
-            textColor: COLORS.text,
-          },
-          columnStyles: {
-            0: {
-              fontStyle: "bold",
-              cellWidth: 50,
-              textColor: COLORS.primary,
-              fillColor: COLORS.lightGray,
-            },
-            1: { cellWidth: "auto" },
-          },
-          margin: { left: margin, right: margin },
-          pageBreak: "avoid",
-          showHead: "firstPage",
-        })
-=======
           autoTable(doc, {
             startY: yPosition,
             head: [],
@@ -996,21 +759,13 @@ export async function generateQuickInspectionPDF(data: {
             pageBreak: "avoid",
             showHead: "firstPage",
           })
->>>>>>> main
 
           yPosition = (doc as any).lastAutoTable.finalY + 8
 
-<<<<<<< HEAD
-        doc.setFontSize(9)
-        doc.setTextColor(150, 150, 150)
-        doc.text("Sin evidencia fotográfica", pageWidth / 2, yPosition, { align: "center" })
-        yPosition += 8
-=======
           doc.setFontSize(9)
           doc.setTextColor(150, 150, 150)
           doc.text("Sin evidencia fotográfica", pageWidth / 2, yPosition, { align: "center" })
           yPosition += 12
->>>>>>> main
 
           if (i < findingsWithoutPhotos.length - 1) {
             yPosition += 3
