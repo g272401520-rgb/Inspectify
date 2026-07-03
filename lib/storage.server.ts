@@ -491,16 +491,12 @@ export async function getInspections(): Promise<Inspection[]> {
     return acc
   }, {})
 
-  return (inspectionsData || []).map((inspection: any) => ({
-    id: inspection.id,
-    areaId: inspection.area_id,
-    checklistId: inspection.checklist_id,
-    date: inspection.date,
-    inspectorName: inspection.inspector_name,
-    status: inspection.status as "en-progreso" | "completada",
-    findings: Array(findingsByInspection[inspection.id] || 0).fill({
-      id: "",
-      itemId: "",
+  return (inspectionsData || []).map((inspection: any) => {
+    const findingCount = findingsByInspection[inspection.id] || 0
+    // Create dummy findings with correct count for display purposes
+    const dummyFindings = Array.from({ length: findingCount }, (_, i) => ({
+      id: `dummy-${i}`,
+      itemId: `dummy-${i}`,
       description: "",
       status: "pendiente" as const,
       correctiveAction: "",
@@ -508,8 +504,18 @@ export async function getInspections(): Promise<Inspection[]> {
       closedDate: "",
       photos: [],
       solutionPhotos: [],
-    }),
-  }))
+    }))
+    
+    return {
+      id: inspection.id,
+      areaId: inspection.area_id,
+      checklistId: inspection.checklist_id,
+      date: inspection.date,
+      inspectorName: inspection.inspector_name,
+      status: inspection.status as "en-progreso" | "completada",
+      findings: dummyFindings,
+    }
+  })
 }
 
 export async function getInspectionsByArea(areaId: string): Promise<Inspection[]> {

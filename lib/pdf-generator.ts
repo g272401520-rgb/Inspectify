@@ -589,7 +589,6 @@ export async function generateQuickInspectionPDF(data: {
         yPosition += 15
 
         const findingData = [
-          ["Criterio", "Hallazgo Identificado"],
           ["Descripción", hallazgo.descripcion || "Sin descripción"],
         ]
 
@@ -732,7 +731,6 @@ export async function generateQuickInspectionPDF(data: {
           yPosition += 12
 
           const findingData = [
-            ["Criterio", "Hallazgo Identificado"],
             ["Descripción", hallazgo.descripcion || "Sin descripción"],
           ]
 
