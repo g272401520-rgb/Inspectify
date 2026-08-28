@@ -310,6 +310,111 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       yPosition += 85
     }
 
+    // SECCIÓN 3: HALLAZGOS Y FOTOGRAFÍAS
+    if (inspection.findings.length > 0) {
+      doc.addPage()
+      yPosition = 20
+      doc.setFillColor(...COLORS.accent)
+      doc.rect(15, yPosition, 180, 8, "F")
+      doc.setFontSize(14)
+      doc.setTextColor(...COLORS.white)
+      doc.setFont("helvetica", "bold")
+      doc.text(`${sectionNumber}. HALLAZGOS`, 20, yPosition + 5.5)
+      doc.setFont("helvetica", "normal")
+      yPosition += 15
+
+      for (let findingIndex = 0; findingIndex < inspection.findings.length; findingIndex++) {
+        const finding = inspection.findings[findingIndex]
+        const photos = Array.isArray(finding.photos) ? finding.photos.filter(Boolean) : []
+
+        if (yPosition > 245) {
+          doc.addPage()
+          yPosition = 20
+        }
+
+        doc.setFillColor(...COLORS.primary)
+        doc.rect(15, yPosition, 180, 8, "F")
+        doc.setFontSize(11)
+        doc.setTextColor(...COLORS.white)
+        doc.setFont("helvetica", "bold")
+        doc.text(`Hallazgo ${findingIndex + 1}`, 20, yPosition + 5.5)
+        doc.setFont("helvetica", "normal")
+        yPosition += 12
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [],
+          body: [["Descripción", finding.description || "Sin descripción"]],
+          theme: "grid",
+          styles: { fontSize: 10, cellPadding: 4, textColor: COLORS.text },
+          columnStyles: {
+            0: { fontStyle: "bold", cellWidth: 45, textColor: COLORS.primary, fillColor: COLORS.lightGray },
+            1: { cellWidth: "auto" },
+          },
+          margin: { left: 15, right: 15 },
+          pageBreak: "auto",
+        })
+        yPosition = (doc as any).lastAutoTable.finalY + 8
+
+        if (photos.length === 0) {
+          doc.setFontSize(9)
+          doc.setTextColor(150, 150, 150)
+          doc.text("Sin evidencia fotográfica", pageWidth / 2, yPosition, { align: "center" })
+          yPosition += 12
+          continue
+        }
+
+        doc.setFontSize(10)
+        doc.setTextColor(...COLORS.primary)
+        doc.setFont("helvetica", "bold")
+        doc.text("Evidencia fotográfica", pageWidth / 2, yPosition, { align: "center" })
+        doc.setFont("helvetica", "normal")
+        yPosition += 7
+
+        for (let photoIndex = 0; photoIndex < photos.length; photoIndex++) {
+          const photoUrl = photos[photoIndex]
+          if (yPosition > 225) {
+            doc.addPage()
+            yPosition = 20
+          }
+
+          try {
+            const image = await loadAndOptimizeImage(photoUrl)
+            const maxWidth = pageWidth - 40
+            const maxHeight = 105
+            const ratio = image.height / image.width
+            let width = maxWidth
+            let height = width * ratio
+            if (height > maxHeight) {
+              height = maxHeight
+              width = height / ratio
+            }
+            const x = (pageWidth - width) / 2
+
+            if (yPosition + height + 10 > pageHeight - 15) {
+              doc.addPage()
+              yPosition = 20
+            }
+
+            doc.addImage(image.dataUrl, "JPEG", x, yPosition, width, height)
+            doc.setDrawColor(...COLORS.primary)
+            doc.setLineWidth(0.5)
+            doc.rect(x, yPosition, width, height)
+            doc.setFontSize(8)
+            doc.setTextColor(...COLORS.text)
+            doc.text(`Foto ${photoIndex + 1} de ${photos.length}`, pageWidth / 2, yPosition + height + 4, { align: "center" })
+            yPosition += height + 10
+          } catch (error) {
+            console.error("[v0] Error agregando foto del checklist al PDF:", error)
+            doc.setFontSize(9)
+            doc.setTextColor(150, 150, 150)
+            doc.text(`No se pudo cargar la foto ${photoIndex + 1}`, pageWidth / 2, yPosition + 8, { align: "center" })
+            yPosition += 15
+          }
+        }
+      }
+    }
+
     const pageCount = doc.getNumberOfPages()
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i)
