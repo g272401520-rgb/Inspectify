@@ -96,8 +96,9 @@ export async function saveInspectionAction(
         closedDate: finding.closedDate || "",
         trackingStatus: finding.trackingStatus || "pendiente",
         // Solo incluir URLs de fotos, NO thumbnails ni base64
-        photos: finding.photos.filter((photo) => photo.startsWith("http")),
-        solutionPhotos: finding.solutionPhotos?.filter((photo) => photo.startsWith("http")) || [],
+        photos: finding.photos.filter((photo) => photo.startsWith("http") || photo.startsWith("data:image/")),
+        solutionPhotos:
+          finding.solutionPhotos?.filter((photo) => photo.startsWith("http") || photo.startsWith("data:image/")) || [],
         // NO incluir thumbnails en el servidor
       })),
     }

@@ -385,19 +385,16 @@ export async function generateQuickInspectionPDF(data: {
   hallazgos: Array<{ descripcion: string; fotos: string[] }>
 }): Promise<void> {
   try {
-    console.log("[v0] generateQuickInspectionPDF: Generando PDF OPTIMIZADO para INSPECCIÓN RÁPIDA (LANDSCAPE)...")
-    console.log("[v0] ✓ Orientación: HORIZONTAL (297mm × 210mm)")
-    console.log("[v0] ✓ Imágenes maximizadas: 277mm × 170mm")
+    console.log("[v0] generateQuickInspectionPDF: Generando PDF vertical para inspección rápida")
 
-    // ✅ CREAR PDF EN ORIENTACIÓN HORIZONTAL
     const doc = new jsPDF({
-      orientation: "landscape",
+      orientation: "portrait",
       unit: "mm",
       format: "a4",
     })
 
-    const pageWidth = 297  // Ancho en landscape
-    const pageHeight = 210 // Alto en landscape
+    const pageWidth = 210
+    const pageHeight = 297
     let yPosition = 20
 
     // HEADER
@@ -626,11 +623,11 @@ export async function generateQuickInspectionPDF(data: {
           doc.setFont("helvetica", "normal")
           yPosition += 8
 
-          // ✅ DIMENSIONES OPTIMIZADAS PARA LANDSCAPE
-          const margin = 10
-          const photoWidth = pageWidth - 2 * margin    // 277mm ancho
-          const maxPhotoHeight = 170                   // 170mm alto
-          const photoSpacing = 5                       // 5mm entre fotos
+          // Dimensiones optimizadas para A4 vertical
+          const margin = 15
+          const photoWidth = pageWidth - 2 * margin
+          const maxPhotoHeight = 105
+          const photoSpacing = 8
 
           // ✅ PRESERVAR ORDEN EXACTO DE FOTOS
           for (let j = 0; j < hallazgo.fotos.length; j++) {
@@ -665,8 +662,8 @@ export async function generateQuickInspectionPDF(data: {
                 finalWidth = maxPhotoHeight / aspectRatio
               }
 
-              // GESTIÓN DE SALTOS DE PÁGINA PARA LANDSCAPE
-              if (yPosition + finalHeight > 200) {
+              // Saltar de página antes de recortar una fotografía
+              if (yPosition + finalHeight + 8 > pageHeight - 15) {
                 doc.addPage()
                 yPosition = 20
               }
