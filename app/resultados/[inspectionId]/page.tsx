@@ -1177,6 +1177,39 @@ export default function ResultsPage() {
             </Card>
           )}
 
+          {/* Hallazgos y fotografías */}
+          {!isRegistroChecklist && inspection.findings.length > 0 && (
+            <Card className="mb-6 md:mb-8">
+              <CardHeader className="px-4 md:px-6">
+                <CardTitle className="text-base md:text-lg">Hallazgos y fotografías</CardTitle>
+                <CardDescription>Detalle completo de los hallazgos registrados en esta inspección</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 px-4 md:px-6">
+                {inspection.findings.map((finding, index) => (
+                  <div key={finding.id || `finding-${index}`} className="rounded-lg border border-border p-4 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="font-semibold text-foreground">Hallazgo {index + 1}</h3>
+                      <span className="text-sm text-muted-foreground">{finding.status}</span>
+                    </div>
+                    <p className="text-sm leading-6 text-foreground">{finding.description || "Sin descripción"}</p>
+                    {finding.photos.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {finding.photos.map((photo, photoIndex) => (
+                          <figure key={`${photo}-${photoIndex}`} className="space-y-2">
+                            <img src={photo} alt={`Evidencia del hallazgo ${index + 1}, foto ${photoIndex + 1}`} className="h-auto max-h-96 w-full rounded-md border border-border object-contain" />
+                            <figcaption className="text-center text-xs text-muted-foreground">Foto {photoIndex + 1}</figcaption>
+                          </figure>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Sin fotografías de evidencia.</p>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Detalles por Categoría */}
           {!isRegistroChecklist && (
             <Card className="mb-6 md:mb-8">
