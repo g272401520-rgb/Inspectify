@@ -164,67 +164,58 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
 
     yPosition = (doc as any).lastAutoTable.finalY + 15
 
-    if (isRegistroChecklist) {
-      if (yPosition > 200) {
-        doc.addPage()
-        yPosition = 20
-      }
-
-      doc.setFillColor(...COLORS.accent)
-      doc.rect(15, yPosition, 180, 8, "F")
-      doc.setFontSize(14)
-      doc.setTextColor(...COLORS.white)
-      doc.setFont("helvetica", "bold")
-      doc.text(`${sectionNumber}. RESUMEN DE LA INSPECCIÓN`, 20, yPosition + 5.5)
-      doc.setFont("helvetica", "normal")
-      yPosition += 13
-      sectionNumber++
-
-      const registroTableData = checklist.items.map((item) => {
-        const finding = inspection.findings.find((f) => f.itemId === item.id)
-        const estado = finding?.status === "no-conforme" ? "No Conforme" : "Conforme"
-        return [item.criterion, estado]
-      })
-
-      autoTable(doc, {
-        startY: yPosition,
-        head: [["Nombre del Registro", "Estado"]],
-        body: registroTableData,
-        theme: "grid",
-        styles: {
-          fontSize: 10,
-          cellPadding: 4,
-          textColor: COLORS.text,
-        },
-        headStyles: {
-          fillColor: COLORS.primary,
-          textColor: [255, 255, 255],
-          fontStyle: "bold",
-          fontSize: 11,
-        },
-        columnStyles: {
-          0: { cellWidth: "auto" },
-          1: {
-            halign: "center",
-            fontStyle: "bold",
-            fontSize: 11,
-            cellWidth: 40,
-          },
-        },
-        margin: { left: 15, right: 15 },
-        didParseCell: (data) => {
-          if (data.column.index === 1 && data.section === "body") {
-            if (data.cell.text[0] === "Conforme") {
-              data.cell.styles.textColor = COLORS.conforme
-            } else if (data.cell.text[0] === "No Conforme") {
-              data.cell.styles.textColor = COLORS.noConforme
-            }
-          }
-        },
-      })
-
-      yPosition = (doc as any).lastAutoTable.finalY + 15
+    if (yPosition > 200) {
+      doc.addPage()
+      yPosition = 20
     }
+
+    doc.setFillColor(...COLORS.accent)
+    doc.rect(15, yPosition, 180, 8, "F")
+    doc.setFontSize(14)
+    doc.setTextColor(...COLORS.white)
+    doc.setFont("helvetica", "bold")
+    doc.text(`${sectionNumber}. RESULTADOS DEL CHECKLIST`, 20, yPosition + 5.5)
+    doc.setFont("helvetica", "normal")
+    yPosition += 13
+    sectionNumber++
+
+    const checklistTableData = checklist.items.map((item) => {
+      const finding = inspection.findings.find((f) => f.itemId === item.id)
+      const estado = finding?.status === "no-conforme" ? "No Conforme" : finding?.status === "pendiente" ? "Pendiente" : "Conforme"
+      return [item.category || "Sin categoría", item.criterion, estado]
+    })
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Categoría", "Criterio", "Estado"]],
+      body: checklistTableData,
+      theme: "grid",
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+        textColor: COLORS.text,
+      },
+      headStyles: {
+        fillColor: COLORS.primary,
+        textColor: COLORS.white,
+        fontStyle: "bold",
+        fontSize: 10,
+      },
+      columnStyles: {
+        0: { cellWidth: 48 },
+        1: { cellWidth: "auto" },
+        2: { halign: "center", fontStyle: "bold", cellWidth: 32 },
+      },
+      margin: { left: 15, right: 15 },
+      didParseCell: (data) => {
+        if (data.column.index === 2 && data.section === "body") {
+          if (data.cell.text[0] === "Conforme") data.cell.styles.textColor = COLORS.conforme
+          if (data.cell.text[0] === "No Conforme") data.cell.styles.textColor = COLORS.noConforme
+        }
+      },
+    })
+
+    yPosition = (doc as any).lastAutoTable.finalY + 15
 
     if (yPosition > 210) {
       doc.addPage()
@@ -311,7 +302,8 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
     }
 
     // SECCIÓN 3: HALLAZGOS Y FOTOGRAFÍAS
-    if (inspection.findings.length > 0) {
+    const nonConformingFindings = inspection.findings.filter((finding) => finding.status === "no-conforme")
+    if (nonConformingFindings.length > 0) {
       doc.addPage()
       yPosition = 20
       doc.setFillColor(...COLORS.accent)
@@ -323,8 +315,8 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
       doc.setFont("helvetica", "normal")
       yPosition += 15
 
-      for (let findingIndex = 0; findingIndex < inspection.findings.length; findingIndex++) {
-        const finding = inspection.findings[findingIndex]
+      for (let findingIndex = 0; findingIndex < nonConformingFindings.length; findingIndex++) {
+        const finding = nonConformingFindings[findingIndex]
         const photos = Array.isArray(finding.photos) ? finding.photos.filter(Boolean) : []
 
         if (yPosition > 245) {
@@ -344,7 +336,14 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
         autoTable(doc, {
           startY: yPosition,
           head: [],
-          body: [["Descripción", finding.description || "Sin descripción"]],
+          body: [
+            ["Categoría", checklist.items.find((item) => item.id === finding.itemId)?.category || "Sin categoría"],
+            ["Criterio", checklist.items.find((item) => item.id === finding.itemId)?.criterion || "Sin criterio"],
+            ["Descripción", finding.description || "Sin descripción"],
+            ["Acción correctiva", finding.correctiveAction || "No especificada"],
+            ["Estado", finding.trackingStatus === "resuelto" ? "Resuelto" : finding.trackingStatus === "en-proceso" ? "En proceso" : "Pendiente"],
+            ["Fecha límite", finding.dueDate ? new Date(finding.dueDate).toLocaleDateString("es-ES") : "No especificada"],
+          ],
           theme: "grid",
           styles: { fontSize: 10, cellPadding: 4, textColor: COLORS.text },
           columnStyles: {
@@ -410,6 +409,57 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
             doc.setTextColor(150, 150, 150)
             doc.text(`No se pudo cargar la foto ${photoIndex + 1}`, pageWidth / 2, yPosition + 8, { align: "center" })
             yPosition += 15
+          }
+        }
+
+        const solutionPhotos = Array.isArray(finding.solutionPhotos) ? finding.solutionPhotos.filter(Boolean) : []
+        if (solutionPhotos.length > 0) {
+          if (yPosition > 225) {
+            doc.addPage()
+            yPosition = 20
+          }
+          doc.setFontSize(10)
+          doc.setTextColor(...COLORS.primary)
+          doc.setFont("helvetica", "bold")
+          doc.text("Fotografías de solución", pageWidth / 2, yPosition, { align: "center" })
+          doc.setFont("helvetica", "normal")
+          yPosition += 7
+
+          for (let solutionIndex = 0; solutionIndex < solutionPhotos.length; solutionIndex++) {
+            if (yPosition > 225) {
+              doc.addPage()
+              yPosition = 20
+            }
+            try {
+              const image = await loadAndOptimizeImage(solutionPhotos[solutionIndex])
+              const ratio = image.height / image.width
+              const maxWidth = pageWidth - 40
+              const maxHeight = 105
+              let width = maxWidth
+              let height = width * ratio
+              if (height > maxHeight) {
+                height = maxHeight
+                width = height / ratio
+              }
+              const x = (pageWidth - width) / 2
+              if (yPosition + height + 10 > pageHeight - 15) {
+                doc.addPage()
+                yPosition = 20
+              }
+              doc.addImage(image.dataUrl, "JPEG", x, yPosition, width, height)
+              doc.setDrawColor(...COLORS.primary)
+              doc.rect(x, yPosition, width, height)
+              doc.setFontSize(8)
+              doc.setTextColor(...COLORS.text)
+              doc.text(`Solución ${solutionIndex + 1} de ${solutionPhotos.length}`, pageWidth / 2, yPosition + height + 4, { align: "center" })
+              yPosition += height + 10
+            } catch (error) {
+              console.error("[v0] Error agregando foto de solución al PDF:", error)
+              doc.setFontSize(9)
+              doc.setTextColor(150, 150, 150)
+              doc.text(`No se pudo cargar la foto de solución ${solutionIndex + 1}`, pageWidth / 2, yPosition + 8, { align: "center" })
+              yPosition += 15
+            }
           }
         }
       }
