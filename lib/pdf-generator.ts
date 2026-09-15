@@ -219,7 +219,10 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
 
     yPosition = (doc as any).lastAutoTable.finalY + 15
 
-    if (yPosition > 210) {
+    // El gráfico completo necesita espacio para título, dona y leyenda.
+    // Si no cabe íntegramente, comienza en una página nueva para evitar cortes.
+    const chartRequiredHeight = isRegistroChecklist ? 95 : 125
+    if (yPosition + chartRequiredHeight > pageHeight - 15) {
       doc.addPage()
       yPosition = 20
     }
@@ -342,9 +345,6 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
             ["Categoría", checklist.items.find((item) => item.id === finding.itemId)?.category || "Sin categoría"],
             ["Criterio", checklist.items.find((item) => item.id === finding.itemId)?.criterion || "Sin criterio"],
             ["Descripción", finding.description || "Sin descripción"],
-            ["Acción correctiva", finding.correctiveAction || "No especificada"],
-            ["Estado", finding.trackingStatus === "resuelto" ? "Resuelto" : finding.trackingStatus === "en-proceso" ? "En proceso" : "Pendiente"],
-            ["Fecha límite", finding.dueDate ? new Date(finding.dueDate).toLocaleDateString("es-ES") : "No especificada"],
           ],
           theme: "grid",
           styles: { fontSize: 10, cellPadding: 4, textColor: COLORS.text },
