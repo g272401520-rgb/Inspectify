@@ -96,7 +96,9 @@ async function loadAndOptimizeImage(photoUrl: string): Promise<{ dataUrl: string
 export async function generateInspectionPDF(inspection: Inspection, area: Area, checklist: Checklist): Promise<void> {
   try {
     console.log("[v0] generateInspectionPDF: Iniciando generación de PDF para INSPECCIÓN NORMAL...")
-    const doc = new jsPDF()
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
+    const pageWidth = 210
+    const pageHeight = 297
     const stats = calculateInspectionStats(inspection, checklist)
     const compliancePercentage =
       stats.totalCriteria > 0 ? ((stats.totalCriteria - stats.totalFindings) / stats.totalCriteria) * 100 : 100
@@ -477,11 +479,19 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
 
     const fileName = `Informe_${area.name.replace(/[^a-zA-Z0-9]/g, "_")}_${new Date(inspection.date).toLocaleDateString("es-ES").replace(/\//g, "-")}.pdf`
 
-    console.log("[v0] Guardando PDF...")
-    doc.save(fileName)
-
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    console.log("[v0] PDF generado y descargado exitosamente")
+    console.log("[v0] Preparando descarga PDF...")
+    const blob = doc.output("blob")
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = fileName
+    link.rel = "noopener"
+    link.style.display = "none"
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+    console.log("[v0] PDF generado y descarga iniciada")
   } catch (error) {
     console.error("[v0] Error generando PDF:", error)
     throw new Error("No se pudo generar el PDF. Por favor, intenta nuevamente.")
@@ -940,14 +950,19 @@ export async function generateQuickInspectionPDF(data: {
       .toLocaleDateString("es-ES")
       .replace(/\//g, "-")}.pdf`
 
-    console.log("[v0] Guardando PDF LANDSCAPE optimizado...")
-    doc.save(fileName)
-
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    console.log("[v0] ✅ PDF generado exitosamente")
-    console.log("[v0] ✅ Orientación: LANDSCAPE (297mm × 210mm)")
-    console.log("[v0] ✅ Imágenes: 277mm × 170mm (maximizadas)")
-    console.log("[v0] ✅ Orden: Preservado exactamente")
+    console.log("[v0] Preparando descarga de inspección rápida...")
+    const blob = doc.output("blob")
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = fileName
+    link.rel = "noopener"
+    link.style.display = "none"
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+    console.log("[v0] PDF de inspección rápida generado y descarga iniciada")
   } catch (error) {
     console.error("[v0] Error generando PDF de inspección rápida:", error)
     throw new Error("No se pudo generar el PDF. Por favor, intenta nuevamente.")
