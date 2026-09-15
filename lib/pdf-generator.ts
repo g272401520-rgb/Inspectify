@@ -96,7 +96,9 @@ async function loadAndOptimizeImage(photoUrl: string): Promise<{ dataUrl: string
 export async function generateInspectionPDF(inspection: Inspection, area: Area, checklist: Checklist): Promise<void> {
   try {
     console.log("[v0] generateInspectionPDF: Iniciando generación de PDF para INSPECCIÓN NORMAL...")
-    const doc = new jsPDF()
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
+    const pageWidth = 210
+    const pageHeight = 297
     const stats = calculateInspectionStats(inspection, checklist)
     const compliancePercentage =
       stats.totalCriteria > 0 ? ((stats.totalCriteria - stats.totalFindings) / stats.totalCriteria) * 100 : 100
@@ -217,7 +219,10 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
 
     yPosition = (doc as any).lastAutoTable.finalY + 15
 
-    if (yPosition > 210) {
+    // El gráfico completo necesita espacio para título, dona y leyenda.
+    // Si no cabe íntegramente, comienza en una página nueva para evitar cortes.
+    const chartRequiredHeight = isRegistroChecklist ? 95 : 125
+    if (yPosition + chartRequiredHeight > pageHeight - 15) {
       doc.addPage()
       yPosition = 20
     }
@@ -319,7 +324,31 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
         const finding = nonConformingFindings[findingIndex]
         const photos = Array.isArray(finding.photos) ? finding.photos.filter(Boolean) : []
 
-        if (yPosition > 245) {
+        // Reservar el espacio del bloque completo antes de dibujarlo. Así la
+        // tabla y la primera evidencia no quedan separadas entre páginas.
+        let estimatedPhotoHeight = 0
+        if (photos.length > 0) {
+          try {
+            const firstImage = await loadAndOptimizeImage(photos[0])
+            const ratio = firstImage.height / firstImage.width
+            estimatedPhotoHeight = Math.min(105, (pageWidth - 40) * ratio)
+          } catch {
+            estimatedPhotoHeight = 15
+          }
+        }
+
+        const findingItem = checklist.items.find((item) => item.id === finding.itemId)
+        const estimateRowHeight = (value: string, width: number) => {
+          const lines = doc.splitTextToSize(value || "Sin información", width).length
+          return Math.max(10, lines * 4 + 8)
+        }
+        const estimatedTableHeight =
+          estimateRowHeight(findingItem?.category || "Sin categoría", 135) +
+          estimateRowHeight(findingItem?.criterion || "Sin criterio", 135) +
+          estimateRowHeight(finding.description || "Sin descripción", 135)
+        const estimatedBlockHeight = 12 + estimatedTableHeight + (photos.length > 0 ? 17 + estimatedPhotoHeight + 10 : 12)
+
+        if (yPosition + estimatedBlockHeight > pageHeight - 15) {
           doc.addPage()
           yPosition = 20
         }
@@ -340,9 +369,6 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
             ["Categoría", checklist.items.find((item) => item.id === finding.itemId)?.category || "Sin categoría"],
             ["Criterio", checklist.items.find((item) => item.id === finding.itemId)?.criterion || "Sin criterio"],
             ["Descripción", finding.description || "Sin descripción"],
-            ["Acción correctiva", finding.correctiveAction || "No especificada"],
-            ["Estado", finding.trackingStatus === "resuelto" ? "Resuelto" : finding.trackingStatus === "en-proceso" ? "En proceso" : "Pendiente"],
-            ["Fecha límite", finding.dueDate ? new Date(finding.dueDate).toLocaleDateString("es-ES") : "No especificada"],
           ],
           theme: "grid",
           styles: { fontSize: 10, cellPadding: 4, textColor: COLORS.text },
@@ -477,11 +503,19 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
 
     const fileName = `Informe_${area.name.replace(/[^a-zA-Z0-9]/g, "_")}_${new Date(inspection.date).toLocaleDateString("es-ES").replace(/\//g, "-")}.pdf`
 
-    console.log("[v0] Guardando PDF...")
-    doc.save(fileName)
-
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    console.log("[v0] PDF generado y descargado exitosamente")
+    console.log("[v0] Preparando descarga PDF...")
+    const blob = doc.output("blob")
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = fileName
+    link.rel = "noopener"
+    link.style.display = "none"
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+    console.log("[v0] PDF generado y descarga iniciada")
   } catch (error) {
     console.error("[v0] Error generando PDF:", error)
     throw new Error("No se pudo generar el PDF. Por favor, intenta nuevamente.")
@@ -940,14 +974,19 @@ export async function generateQuickInspectionPDF(data: {
       .toLocaleDateString("es-ES")
       .replace(/\//g, "-")}.pdf`
 
-    console.log("[v0] Guardando PDF LANDSCAPE optimizado...")
-    doc.save(fileName)
-
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    console.log("[v0] ✅ PDF generado exitosamente")
-    console.log("[v0] ✅ Orientación: LANDSCAPE (297mm × 210mm)")
-    console.log("[v0] ✅ Imágenes: 277mm × 170mm (maximizadas)")
-    console.log("[v0] ✅ Orden: Preservado exactamente")
+    console.log("[v0] Preparando descarga de inspección rápida...")
+    const blob = doc.output("blob")
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = fileName
+    link.rel = "noopener"
+    link.style.display = "none"
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+    console.log("[v0] PDF de inspección rápida generado y descarga iniciada")
   } catch (error) {
     console.error("[v0] Error generando PDF de inspección rápida:", error)
     throw new Error("No se pudo generar el PDF. Por favor, intenta nuevamente.")
