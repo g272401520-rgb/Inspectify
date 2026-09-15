@@ -324,7 +324,31 @@ export async function generateInspectionPDF(inspection: Inspection, area: Area, 
         const finding = nonConformingFindings[findingIndex]
         const photos = Array.isArray(finding.photos) ? finding.photos.filter(Boolean) : []
 
-        if (yPosition > 245) {
+        // Reservar el espacio del bloque completo antes de dibujarlo. Así la
+        // tabla y la primera evidencia no quedan separadas entre páginas.
+        let estimatedPhotoHeight = 0
+        if (photos.length > 0) {
+          try {
+            const firstImage = await loadAndOptimizeImage(photos[0])
+            const ratio = firstImage.height / firstImage.width
+            estimatedPhotoHeight = Math.min(105, (pageWidth - 40) * ratio)
+          } catch {
+            estimatedPhotoHeight = 15
+          }
+        }
+
+        const findingItem = checklist.items.find((item) => item.id === finding.itemId)
+        const estimateRowHeight = (value: string, width: number) => {
+          const lines = doc.splitTextToSize(value || "Sin información", width).length
+          return Math.max(10, lines * 4 + 8)
+        }
+        const estimatedTableHeight =
+          estimateRowHeight(findingItem?.category || "Sin categoría", 135) +
+          estimateRowHeight(findingItem?.criterion || "Sin criterio", 135) +
+          estimateRowHeight(finding.description || "Sin descripción", 135)
+        const estimatedBlockHeight = 12 + estimatedTableHeight + (photos.length > 0 ? 17 + estimatedPhotoHeight + 10 : 12)
+
+        if (yPosition + estimatedBlockHeight > pageHeight - 15) {
           doc.addPage()
           yPosition = 20
         }
