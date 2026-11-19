@@ -8,8 +8,11 @@ import { ArrowLeft, Plus, X } from "lucide-react"
 import { saveChecklistAction } from "@/lib/actions"
 import type { Checklist, ChecklistCategory as ChecklistCategoryType, ChecklistItem } from "@/lib/types"
 import { navigateTo, getHashParam } from "@/lib/navigation"
+import { useActionValidation } from "@/hooks/use-action-validation"
+import { ValidationNoticeDialog } from "@/components/validation-notice-dialog"
 
 export default function NuevoChecklistPage() {
+  const { validationNotice, setValidationNotice, showValidationError } = useActionValidation()
   const [areaId, setAreaId] = useState<string>("")
   const [checklistName, setChecklistName] = useState("")
   const [categories, setCategories] = useState<ChecklistCategoryType[]>([])
@@ -126,24 +129,30 @@ export default function NuevoChecklistPage() {
 
   const handleSave = async () => {
     if (!checklistName.trim()) {
-      alert("Por favor ingresa un nombre para el checklist")
+      showValidationError("empty-name")
       return
     }
 
     if (categories.length === 0) {
-      alert("Por favor agrega al menos una categoría")
+      showValidationError("empty-categories")
       return
     }
 
     const hasEmptyCategories = categories.some((cat) => !cat.name.trim())
     if (hasEmptyCategories) {
-      alert("Por favor completa los nombres de todas las categorías")
+      setValidationNotice({
+        title: "Categorías incompletas",
+        description: "Por favor completa los nombres de todas las categorías.",
+      })
       return
     }
 
     const hasEmptyCriteria = categories.some((cat) => cat.criteria.some((crit) => !crit.name.trim()))
     if (hasEmptyCriteria) {
-      alert("Por favor completa los nombres de todos los criterios")
+      setValidationNotice({
+        title: "Criterios incompletos",
+        description: "Por favor completa los nombres de todos los criterios.",
+      })
       return
     }
 
@@ -172,12 +181,16 @@ export default function NuevoChecklistPage() {
       await saveChecklistAction(newChecklist)
       navigateTo(`/area?areaId=${areaId}`)
     } catch (error) {
-      alert("Error al guardar el checklist")
+      setValidationNotice({
+        title: "No se pudo guardar el checklist",
+        description: "Ocurrió un problema al guardar la información. Revisa los datos e inténtalo de nuevo.",
+      })
     }
   }
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
+      <ValidationNoticeDialog notice={validationNotice} onClose={() => setValidationNotice(null)} />
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Button

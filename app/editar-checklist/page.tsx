@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { getChecklistByIdAction, saveChecklistAction } from "@/lib/actions"
 import type { Checklist, ChecklistItem } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
+import { useActionValidation } from "@/hooks/use-action-validation"
+import { ValidationNoticeDialog } from "@/components/validation-notice-dialog"
 import { navigateTo, getHashParam } from "@/lib/navigation"
 import { LoadingScreen } from "@/components/loading-screen"
 import {
@@ -319,10 +321,18 @@ export default function EditChecklistPage() {
 
   const handleSave = async () => {
     if (!checklistName.trim()) {
-      toast({
-        title: "Error",
-        description: "El nombre del checklist es requerido",
-        variant: "destructive",
+      showValidationError("empty-name")
+      return
+    }
+
+    const hasValidCriteria = criteria.some(
+      (crit) => crit.name.trim() && crit.subCriteria.some((sub) => sub.trim()),
+    )
+
+    if (!hasValidCriteria) {
+      setValidationNotice({
+        title: "Criterios incompletos",
+        description: "Debes agregar al menos un criterio con subcriterios.",
       })
       return
     }
@@ -403,6 +413,7 @@ export default function EditChecklistPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <ValidationNoticeDialog notice={validationNotice} onClose={() => setValidationNotice(null)} />
       <header className="border-b border-border bg-blue-900">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">

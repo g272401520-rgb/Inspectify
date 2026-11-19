@@ -24,6 +24,7 @@ import Link from "next/link"
 import { AppLogo } from "@/components/app-logo"
 import { useToast } from "@/hooks/use-toast"
 import { useActionValidation } from "@/hooks/use-action-validation"
+import { ValidationNoticeDialog } from "@/components/validation-notice-dialog"
 import { ValidatedActionButton } from "@/components/validated-action-button"
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 import { ChartContainer } from "@/components/ui/chart"
@@ -78,7 +79,7 @@ interface HallazgoDescription {
  */
 export default function InspeccionRapidaPage() {
   const { toast } = useToast()
-  const { validatePhotos, validateInspectionInfo, getValidationStatus } = useActionValidation()
+  const { validatePhotos, showValidationNotice, validationNotice, setValidationNotice } = useActionValidation()
   const [lugar, setLugar] = useState("")
   const [inspector, setInspector] = useState("")
   const [responsable, setResponsable] = useState("")
@@ -552,21 +553,13 @@ export default function InspeccionRapidaPage() {
     
     if (!lugar || !inspector) {
       console.log("[v0] Validación fallida: lugar o inspector faltante")
-      toast({
-        title: "Campos requeridos",
-        description: "Por favor completa el lugar e inspector",
-        variant: "destructive",
-      })
+      showValidationNotice("Faltan datos de la inspección", "Completa el lugar y el nombre del inspector antes de generar el informe PDF.")
       return
     }
 
     if (photos.length === 0) {
       console.log("[v0] No hay fotos para generar PDF")
-      toast({
-        title: "Sin fotos",
-        description: "Por favor agrega fotos antes de generar el PDF",
-        variant: "destructive",
-      })
+      showValidationNotice("Faltan fotos", "Agrega al menos una foto antes de generar el informe PDF.")
       return
     }
 
@@ -602,11 +595,7 @@ export default function InspeccionRapidaPage() {
             ? `"${hallazgossinDescripcion[0]}"` 
             : hallazgossinDescripcion.map((h) => `"${h}"`).join(", ")
         
-        toast({
-          title: "Descripción requerida",
-          description: `Completa la descripción de: ${descripcionTexto}`,
-          variant: "destructive",
-        })
+        showValidationNotice("Faltan descripciones", `Completa la descripción de: ${descripcionTexto}`)
         return
       }
     }
@@ -799,11 +788,10 @@ export default function InspeccionRapidaPage() {
                 <Button
                   onClick={() => {
                     if (!lugar.trim() || !inspector.trim()) {
-                      toast({
-                        title: "Campos requeridos",
-                        description: "Debes completar Lugar e Inspector",
-                        variant: "destructive",
-                      })
+                      showValidationNotice(
+                        "Faltan datos para continuar",
+                        `Completa ${!lugar.trim() && !inspector.trim() ? "el lugar y el nombre del inspector" : !lugar.trim() ? "el lugar" : "el nombre del inspector"} antes de pasar a la siguiente pantalla.`,
+                      )
                       return
                     }
                     setCurrentStep(2)
@@ -1209,6 +1197,8 @@ export default function InspeccionRapidaPage() {
         </AlertDialogContent>
       </AlertDialog>
       
+      <ValidationNoticeDialog notice={validationNotice} onClose={() => setValidationNotice(null)} />
+
       {currentPhotoForEdit && (
         <PhotoEditor
           imageUrl={currentPhotoForEdit}

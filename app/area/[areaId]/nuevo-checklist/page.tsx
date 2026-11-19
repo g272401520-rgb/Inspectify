@@ -12,6 +12,8 @@ import { saveChecklistAction } from "@/lib/actions"
 import type { Checklist, ChecklistItem } from "@/lib/types"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import { useActionValidation } from "@/hooks/use-action-validation"
+import { ValidationNoticeDialog } from "@/components/validation-notice-dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +43,7 @@ export default function NuevoChecklistPage() {
   const router = useRouter()
   const params = useParams()
   const { toast } = useToast()
+  const { validationNotice, setValidationNotice, showValidationError } = useActionValidation()
   const areaId = params.areaId as string
 
   const [checklistName, setChecklistName] = useState("")
@@ -147,11 +150,7 @@ export default function NuevoChecklistPage() {
 
   const handleSave = async () => {
     if (!checklistName.trim()) {
-      toast({
-        title: "Error",
-        description: "El nombre del checklist es requerido",
-        variant: "destructive",
-      })
+      showValidationError("empty-name")
       return
     }
 
@@ -160,11 +159,7 @@ export default function NuevoChecklistPage() {
     )
 
     if (validCategories.length === 0) {
-      toast({
-        title: "Error",
-        description: "Debes agregar al menos una categoría con criterios",
-        variant: "destructive",
-      })
+      showValidationError("empty-categories")
       return
     }
 
@@ -209,6 +204,7 @@ export default function NuevoChecklistPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <ValidationNoticeDialog notice={validationNotice} onClose={() => setValidationNotice(null)} />
       <header className="sticky top-0 z-10 border-b border-border bg-[#054078] shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">

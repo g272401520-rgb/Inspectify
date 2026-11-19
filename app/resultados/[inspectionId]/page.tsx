@@ -28,6 +28,8 @@ import { ChartContainer } from "@/components/ui/chart"
 import Link from "next/link"
 import JSZip from "jszip"
 import { useToast } from "@/hooks/use-toast"
+import { useActionValidation } from "@/hooks/use-action-validation"
+import { ValidationNoticeDialog } from "@/components/validation-notice-dialog"
 
 const CustomizedAxisTick = ({ x, y, payload, maxCharsPerLine = 25, maxLines = 3 }) => {
   const label = payload.value
@@ -103,6 +105,7 @@ export default function ResultsPage() {
   const router = useRouter()
   const inspectionId = params.inspectionId as string
   const { toast } = useToast()
+  const { validationNotice, setValidationNotice } = useActionValidation()
 
   const [inspection, setInspection] = useState<Inspection | null>(null)
   const [area, setArea] = useState<Area | null>(null)
@@ -448,10 +451,9 @@ export default function ResultsPage() {
 
   const handleDownloadPDF = async () => {
     if (!inspection || !area || !checklist) {
-      toast({
-        title: "Error",
-        description: "Faltan datos necesarios para generar el informe",
-        variant: "destructive",
+      setValidationNotice({
+        title: "No se puede generar el informe",
+        description: "Faltan datos necesarios. Verifica que la inspección, área y checklist estén disponibles.",
       })
       return
     }
@@ -658,6 +660,7 @@ export default function ResultsPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <ValidationNoticeDialog notice={validationNotice} onClose={() => setValidationNotice(null)} />
       {/* Header */}
       <header className="border-b border-border bg-[#054078]">
         <div className="container mx-auto px-3 md:px-4 py-3 md:py-4">

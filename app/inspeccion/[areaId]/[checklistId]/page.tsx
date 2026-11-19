@@ -34,6 +34,8 @@ import { getAreasAction, getChecklistByIdAction, saveInspectionAction, uploadPho
 import type { Area, Checklist, Inspection, Finding } from "@/lib/types"
 import { generateInspectionId, generateFindingId } from "@/lib/utils-inspection"
 import { useToast } from "@/hooks/use-toast"
+import { useActionValidation } from "@/hooks/use-action-validation"
+import { ValidationNoticeDialog } from "@/components/validation-notice-dialog"
 import { PhotoEditor } from "@/components/photo-editor"
 import { downloadPhotosOptimized } from "@/lib/photo-download-optimizer"
 import { DownloadProgress } from "@/components/download-progress"
@@ -50,6 +52,7 @@ export default function InspectionPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
+  const { showValidationNotice, validationNotice, setValidationNotice } = useActionValidation()
   const areaId = params.areaId as string
   const checklistId = params.checklistId as string
 
@@ -737,11 +740,7 @@ export default function InspectionPage() {
     logger.log("[v0] Criteria states:", criteriaStates)
 
     if (!inspectorName.trim()) {
-      toast({
-        title: "❌ Falta el nombre del inspector",
-        description: "Por favor ingresa el nombre del inspector antes de finalizar",
-        variant: "destructive",
-      })
+      showValidationNotice("Falta el nombre del inspector", "Ingresa el nombre del inspector antes de finalizar la inspección.")
       return
     }
 
@@ -755,12 +754,10 @@ export default function InspectionPage() {
 
       if (noConformesWithoutDescription.length > 0) {
         const criterionIds = noConformesWithoutDescription.map(([id]) => id).join(", ")
-        toast({
-          title: "❌ Faltan observaciones",
-          description: `Los hallazgos "No Conforme" deben tener una observación. Revisa los criterios: ${criterionIds.substring(0, 50)}${criterionIds.length > 50 ? "..." : ""}`,
-          variant: "destructive",
-          duration: 8000,
-        })
+        showValidationNotice(
+          "Faltan observaciones",
+          `Los hallazgos “No Conforme” necesitan una observación. Revisa los criterios: ${criterionIds.substring(0, 50)}${criterionIds.length > 50 ? "..." : ""}`,
+        )
         return
       }
 
@@ -783,11 +780,7 @@ export default function InspectionPage() {
     // Validar que haya al menos un criterio evaluado
     const evaluatedCriteria = Object.values(criteriaStates).filter((state) => state.status !== null)
     if (evaluatedCriteria.length === 0) {
-      toast({
-        title: "❌ No hay criterios evaluados",
-        description: "Debes evaluar al menos un criterio antes de finalizar la inspección",
-        variant: "destructive",
-      })
+      showValidationNotice("No hay criterios evaluados", "Evalúa al menos un criterio antes de finalizar la inspección.")
       return
     }
 
@@ -795,7 +788,10 @@ export default function InspectionPage() {
   }
 
   const handleSaveInspection = async () => {
-    if (!currentInspection) return
+    if (!currentInspection) {
+      showValidationNotice("Inspección no disponible", "No se encontró la inspección que intentas guardar. Recarga la pantalla e inténtalo de nuevo.")
+      return
+    }
 
     if (!isOnline) {
       setSaveError(
@@ -1503,6 +1499,8 @@ export default function InspectionPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ValidationNoticeDialog notice={validationNotice} onClose={() => setValidationNotice(null)} />
 
       <Dialog open={showEditConfirmDialog} onOpenChange={setShowEditConfirmDialog}>
         <DialogContent className="w-[95vw] max-w-md">

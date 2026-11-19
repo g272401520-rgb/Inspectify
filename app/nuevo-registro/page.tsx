@@ -10,11 +10,16 @@ import { Textarea } from "@/components/ui/textarea"
 import { saveChecklistAction } from "@/lib/actions"
 import type { Checklist, ChecklistItem } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
+import { useActionValidation } from "@/hooks/use-action-validation"
+import { ValidationNoticeDialog } from "@/components/validation-notice-dialog"
 import { navigateTo, getHashParam } from "@/lib/navigation"
 
 export default function NuevoRegistroPage() {
-  const [areaId, setAreaId] = useState<string>("")
+  const params = useParams()
+  const router = useRouter()
   const { toast } = useToast()
+  const { validationNotice, setValidationNotice, showValidationError } = useActionValidation()
+
 
   const [checklistName, setChecklistName] = useState("")
   const [registrosText, setRegistrosText] = useState("")
@@ -28,11 +33,7 @@ export default function NuevoRegistroPage() {
 
   const handleSave = async () => {
     if (!checklistName.trim()) {
-      toast({
-        title: "Error",
-        description: "Debes ingresar un nombre para el checklist",
-        variant: "destructive",
-      })
+      showValidationError("empty-name")
       return
     }
 
@@ -42,11 +43,7 @@ export default function NuevoRegistroPage() {
       .filter((line) => line.length > 0)
 
     if (registrosArray.length === 0) {
-      toast({
-        title: "Error",
-        description: "Debes agregar al menos un registro",
-        variant: "destructive",
-      })
+      showValidationError("empty-items", "registros")
       return
     }
 
@@ -86,6 +83,7 @@ export default function NuevoRegistroPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <ValidationNoticeDialog notice={validationNotice} onClose={() => setValidationNotice(null)} />
       {/* Header */}
       <header className="border-b border-border bg-[#054078]">
         <div className="container mx-auto px-4 py-4">

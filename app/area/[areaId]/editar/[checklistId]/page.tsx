@@ -12,6 +12,8 @@ import { getChecklistByIdAction, saveChecklistAction } from "@/lib/actions"
 import type { Checklist, ChecklistItem } from "@/lib/types"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import { useActionValidation } from "@/hooks/use-action-validation"
+import { ValidationNoticeDialog } from "@/components/validation-notice-dialog"
 import { LoadingScreen } from "@/components/loading-screen"
 import {
   AlertDialog,
@@ -248,6 +250,7 @@ export default function EditChecklistPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
+  const { validationNotice, setValidationNotice, showValidationError } = useActionValidation()
   const areaId = params.areaId as string
   const checklistId = params.checklistId as string
 
@@ -404,22 +407,14 @@ export default function EditChecklistPage() {
 
   const handleSave = async () => {
     if (!checklistName.trim()) {
-      toast({
-        title: "Error",
-        description: "El nombre del checklist es requerido",
-        variant: "destructive",
-      })
+      showValidationError("empty-name")
       return
     }
 
     const validCategories = categories.filter((cat) => cat.name.trim() && cat.criteria.some((crit) => crit.name.trim()))
 
     if (validCategories.length === 0) {
-      toast({
-        title: "Error",
-        description: "Debes agregar al menos una categoría con criterios",
-        variant: "destructive",
-      })
+      showValidationError("empty-categories")
       return
     }
 
@@ -463,11 +458,7 @@ export default function EditChecklistPage() {
 
   const handleExportToExcel = () => {
     if (!checklistName.trim() || categories.length === 0) {
-      toast({
-        title: "Error",
-        description: "No hay datos para exportar",
-        variant: "destructive",
-      })
+      showValidationError("export-empty")
       return
     }
 
@@ -517,11 +508,12 @@ export default function EditChecklistPage() {
   }
 
   if (loading) {
-    return <LoadingScreen message="Cargando checklist..." />
+    return <LoadingScreen />
   }
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <ValidationNoticeDialog notice={validationNotice} onClose={() => setValidationNotice(null)} />
       <header className="sticky top-0 z-10 border-b border-border bg-[#054078] shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">

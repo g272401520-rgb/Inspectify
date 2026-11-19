@@ -1,6 +1,11 @@
 "use client"
 
-import { useToast } from "@/hooks/use-toast"
+import { useState } from "react"
+
+export interface ValidationNotice {
+  title: string
+  description: string
+}
 
 /**
  * Tipos de validación de acciones
@@ -12,13 +17,22 @@ export type ActionValidationType =
   | "no-hallazgos"
   | "no-criteria"
   | "invalid-state"
+  | "empty-name"
+  | "empty-categories"
+  | "empty-items"
+  | "invalid-format"
+  | "export-empty"
 
 /**
  * Hook para validar acciones y mostrar avisos coherentes
  * Centraliza la lógica de validación y mensajes de error
  */
 export function useActionValidation() {
-  const { toast } = useToast()
+  const [validationNotice, setValidationNotice] = useState<ValidationNotice | null>(null)
+
+  const showValidationNotice = (title: string, description: string): void => {
+    setValidationNotice({ title, description })
+  }
 
   /**
    * Valida si hay datos disponibles
@@ -101,13 +115,17 @@ export function useActionValidation() {
       "no-hallazgos": "No hay hallazgos registrados. Debes agregar al menos un hallazgo antes de generar el informe.",
       "no-criteria": "No hay criterios disponibles. Verifica que el checklist tenga criterios configurados.",
       "invalid-state": "Estado inválido. Por favor, recarga la página e intenta de nuevo.",
+      "empty-name": "Debes ingresar un nombre para continuar. Por favor, completa este campo requerido.",
+      "empty-categories": "Debes agregar al menos una categoría con criterios antes de guardar.",
+      "empty-items": "Debes agregar al menos un elemento antes de guardar.",
+      "invalid-format": "El formato ingresado no es válido. Verifica que todos los datos sean correctos.",
+      "export-empty": "Completa el nombre del checklist y agrega categorías antes de exportar."
     }
 
-    toast({
-      title: "Acción no disponible",
-      description: messages[errorType] || "No se puede realizar esta acción en este momento.",
-      variant: "destructive",
-    })
+    showValidationNotice(
+      "Información incompleta",
+      messages[errorType] || "No se puede realizar esta acción en este momento.",
+    )
   }
 
   /**
@@ -137,6 +155,9 @@ export function useActionValidation() {
   }
 
   return {
+    validationNotice,
+    setValidationNotice,
+    showValidationNotice,
     validateData,
     validatePhotos,
     validateInspectionInfo,

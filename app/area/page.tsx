@@ -11,11 +11,14 @@ import type { Area, Checklist, ChecklistItem } from "@/lib/types"
 import { parseExcelFile } from "@/lib/excel-parser"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import { useActionValidation } from "@/hooks/use-action-validation"
+import { ValidationNoticeDialog } from "@/components/validation-notice-dialog"
 import { getHashParams, createLink } from "@/lib/navigation"
 
 export default function AreaPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { validationNotice, setValidationNotice, showValidationNotice } = useActionValidation()
   const [areaId, setAreaId] = useState<string>("")
 
   const [area, setArea] = useState<Area | null>(null)
@@ -61,7 +64,13 @@ export default function AreaPage() {
   }, [router])
 
   const handleCreateManualChecklist = async () => {
-    if (!newChecklistName.trim() || !manualItems.trim()) return
+    if (!newChecklistName.trim() || !manualItems.trim()) {
+      const missingFields = [!newChecklistName.trim() && "el nombre del checklist", !manualItems.trim() && "los criterios"]
+        .filter(Boolean)
+        .join(" y ")
+      showValidationNotice("Falta información", `Completa ${missingFields} antes de crear el checklist.`)
+      return
+    }
 
     const lines = manualItems.split("\n").filter((line) => line.trim())
     const items: ChecklistItem[] = []
@@ -79,11 +88,10 @@ export default function AreaPage() {
     })
 
     if (items.length === 0) {
-      toast({
-        title: "Error",
-        description: "No se encontraron ítems válidos. Usa el formato: Categoría | Subcategoría | Criterio",
-        variant: "destructive",
-      })
+      showValidationNotice(
+        "Formato de criterios inválido",
+        "No se encontraron ítems válidos. Usa el formato: Categoría | Subcategoría | Criterio.",
+      )
       return
     }
 
@@ -224,6 +232,7 @@ export default function AreaPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <ValidationNoticeDialog notice={validationNotice} onClose={() => setValidationNotice(null)} />
       {/* Header */}
       <header className="border-b border-border bg-[#054078]">
         <div className="container mx-auto px-4 py-4">
