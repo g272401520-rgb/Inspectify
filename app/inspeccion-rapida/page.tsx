@@ -99,6 +99,7 @@ export default function InspeccionRapidaPage() {
   const [selectedHallazgoGroupForPhoto, setSelectedHallazgoGroupForPhoto] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState<1 | 2>(1)
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
+  const [showBackWarning, setShowBackWarning] = useState(false)
 
   const pieChartRef = useRef<HTMLDivElement>(null)
 
@@ -353,6 +354,26 @@ export default function InspeccionRapidaPage() {
 
   const handleRemovePhoto = (id: string) => {
     setPhotos((prev) => prev.filter((p) => p.id !== id))
+  }
+
+  const handleBackFromStep1 = () => {
+    // Si hay datos ingresados en paso 1, mostrar confirmación
+    if (lugar || inspector || responsable) {
+      setShowBackWarning(true)
+    } else {
+      // Si no hay datos, ir directamente al inicio
+      window.location.href = "/"
+    }
+  }
+
+  const handleBackFromStep2 = () => {
+    // Si hay fotos, mostrar confirmación de descarte
+    if (photos.length > 0) {
+      setShowDiscardConfirm(true)
+    } else {
+      // Si no hay fotos, volver al paso 1
+      setCurrentStep(1)
+    }
   }
 
   const handleToggleType = (id: string) => {
@@ -667,11 +688,16 @@ export default function InspeccionRapidaPage() {
         <div className="container mx-auto px-3 md:px-4 py-3 md:py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="h-9 w-9 p-0 bg-white text-[#054078] hover:bg-white/90">
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </Link>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={currentStep === 1 ? handleBackFromStep1 : handleBackFromStep2}
+                aria-label={currentStep === 1 ? "Volver al inicio" : "Volver al paso anterior"}
+                className="h-9 w-9 p-0 bg-white text-[#054078] hover:bg-white/90"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
               <AppLogo />
             </div>
             <div className="flex gap-2">
@@ -780,11 +806,15 @@ export default function InspeccionRapidaPage() {
 
               {/* Botón Siguiente */}
               <div className="flex gap-3">
-                <Link href="/" className="flex-1">
-                  <Button variant="outline" size="lg" className="h-12 w-full rounded-xl text-base">
-                    Cancelar
-                  </Button>
-                </Link>
+                <Button
+                  onClick={handleBackFromStep1}
+                  variant="outline"
+                  size="lg"
+                  className="h-12 flex-1 rounded-xl text-base"
+                >
+                  <ArrowLeft className="mr-2 size-5" aria-hidden="true" />
+                  Cancelar
+                </Button>
                 <Button
                   onClick={() => {
                     if (!lugar.trim() || !inspector.trim()) {
@@ -995,13 +1025,7 @@ export default function InspeccionRapidaPage() {
   {/* Botones finales */}
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
-                  onClick={() => {
-                    if (photos.length > 0) {
-                      setShowDiscardConfirm(true)
-                    } else {
-                      setCurrentStep(1)
-                    }
-                  }}
+                  onClick={handleBackFromStep2}
                   variant="outline"
                   size="lg"
                   className="h-12 flex-1 rounded-xl text-base"
@@ -1188,10 +1212,38 @@ export default function InspeccionRapidaPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Continuar editando</AlertDialogCancel>
             <Button
-              onClick={() => void resetQuickInspection()}
+              onClick={() => {
+                setShowDiscardConfirm(false)
+                resetQuickInspection()
+              }}
               variant="destructive"
             >
               Descartar y volver
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Diálogo: Advertencia de datos sin guardar en Paso 1 */}
+      <AlertDialog open={showBackWarning} onOpenChange={setShowBackWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Descartar datos?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Has ingresado información en los campos de Lugar, Inspector y Responsable. Si cancelas ahora, se perderán estos datos.
+              ¿Deseas continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <Button
+              onClick={() => {
+                setShowBackWarning(false)
+                resetQuickInspection()
+              }}
+              variant="destructive"
+            >
+              Descartar y salir
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
