@@ -1,6 +1,6 @@
 "use server"
 
-import type { Area, Checklist, Inspection } from "./types"
+import type { Area, Checklist, Finding, Inspection } from "./types"
 import { createClient } from "./supabase/server"
 import { logger } from "./logger"
 
@@ -470,7 +470,7 @@ export async function getInspections(): Promise<Inspection[]> {
     .from("inspections")
     .select(`
       *,
-      findings (id)
+      findings (id, item_id, status)
     `)
     .order("date", { ascending: false })
     .limit(500) // Limit to most recent 500 inspections
@@ -489,9 +489,9 @@ export async function getInspections(): Promise<Inspection[]> {
     status: inspection.status as "en-progreso" | "completada",
     findings: (inspection.findings || []).map((finding: any) => ({
       id: finding.id,
-      itemId: finding.id,
+      itemId: finding.item_id,
       description: "",
-      status: "pendiente" as const,
+      status: finding.status as Finding["status"],
       correctiveAction: "",
       dueDate: "",
       closedDate: "",
