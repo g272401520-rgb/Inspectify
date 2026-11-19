@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
-import { ArrowLeft, ArrowRight, Camera, X, Download, FileText, Loader2 } from "lucide-react"
+import { ArrowLeft, ArrowRight, Camera, X, Download, FileText, Loader2, CheckCircle2, AlertTriangle, ClipboardCheck, MapPin, UserRound, ImagePlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -506,6 +506,29 @@ export default function InspeccionRapidaPage() {
     }
   }
 
+  const resetQuickInspection = async () => {
+    try {
+      const db = await initDB()
+      await Promise.all(["fotos", "metadata"].map((storeName) => new Promise<void>((resolve, reject) => {
+        const transaction = db.transaction(storeName, "readwrite")
+        transaction.objectStore(storeName).clear()
+        transaction.oncomplete = () => resolve()
+        transaction.onerror = () => reject(transaction.error)
+      })))
+    } catch (error) {
+      console.error("[v0] Error al limpiar datos de inspección:", error)
+    }
+
+    localStorage.removeItem("inspeccionRapidaData")
+    setLugar("")
+    setInspector("")
+    setResponsable("")
+    setPhotos([])
+    setHallazgoDescriptions({})
+    setCurrentStep(1)
+    setShowDiscardConfirm(false)
+  }
+
   /**
    * GENERACIÓN MANUAL DE PDF - Inspección Rápida
    * 
@@ -618,26 +641,11 @@ export default function InspeccionRapidaPage() {
         title: "✓ PDF generado",
         description: "El informe ha sido descargado correctamente",
       })
-      // Limpiar datos después de generar PDF exitosamente
-      setTimeout(async () => {
-        try {
-          const db = await initDB()
-          const photoTx = db.transaction("fotos", "readwrite")
-          photoTx.objectStore("fotos").clear()
-          
-          const metaTx = db.transaction("metadata", "readwrite")
-          metaTx.objectStore("metadata").clear()
-        } catch (e) {
-          console.error("[v0] Error al limpiar IndexedDB:", e)
-        }
-        
-        localStorage.removeItem("inspeccionRapidaData")
-        setLugar("")
-        setInspector("")
-        setResponsable("")
-        setPhotos([])
-        setHallazgoDescriptions({})
-      }, 1000)
+      await resetQuickInspection()
+      toast({
+        title: "Listo para una nueva inspección",
+        description: "Los datos anteriores se limpiaron y puedes comenzar de nuevo.",
+      })
     } catch (error) {
       console.error("[v0] Error al generar PDF:", error)
       toast({
@@ -706,12 +714,23 @@ export default function InspeccionRapidaPage() {
       </header>
 
       <main className="flex-1 bg-background">
-        {/* Progress Indicator - Solo barras sin texto */}
-        <div className="border-b border-border bg-white sticky top-0 z-10">
-          <div className="container mx-auto px-4 py-3 max-w-6xl">
-            <div className="flex items-center gap-4">
-              <div className={`flex-1 h-2 rounded-full transition-colors ${currentStep >= 1 ? "bg-[#054078]" : "bg-gray-200"}`} />
-              <div className={`flex-1 h-2 rounded-full transition-colors ${currentStep >= 2 ? "bg-[#054078]" : "bg-gray-200"}`} />
+        <div className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur">
+          <div className="container mx-auto flex max-w-6xl items-center gap-3 px-4 py-3" aria-label={`Paso ${currentStep} de 2`}>
+            <div className="flex flex-1 items-center gap-3">
+              <span className={`flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${currentStep === 1 ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"}`}>
+                {currentStep > 1 ? <CheckCircle2 aria-hidden="true" /> : "1"}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">Datos</p>
+                <div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-full w-full rounded-full bg-primary" /></div>
+              </div>
+            </div>
+            <div className="flex flex-1 items-center gap-3">
+              <span className={`flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${currentStep === 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>2</span>
+              <div className="min-w-0 flex-1">
+                <p className={`text-sm font-semibold ${currentStep === 2 ? "text-foreground" : "text-muted-foreground"}`}>Fotos y cierre</p>
+                <div className="mt-1 h-1.5 rounded-full bg-muted"><div className={`h-full rounded-full bg-primary transition-all ${currentStep === 2 ? "w-full" : "w-0"}`} /></div>
+              </div>
             </div>
           </div>
         </div>
@@ -720,18 +739,23 @@ export default function InspeccionRapidaPage() {
           {currentStep === 1 ? (
             // PANTALLA 1: Información de Inspección
             <div className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">Información de la Inspección</h1>
-                <p className="text-muted-foreground">Completa los datos básicos de la inspección</p>
+              <div className="flex items-start gap-4">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><ClipboardCheck aria-hidden="true" /></span>
+                <div>
+                  <p className="text-sm font-semibold text-primary">PASO 1 · DATOS</p>
+                  <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground md:text-3xl">Información de la inspección</h1>
+                  <p className="mt-1 text-muted-foreground">Completa los datos básicos antes de tomar las fotos.</p>
+                </div>
               </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Datos de la Inspección</CardTitle>
+              <Card className="overflow-hidden border-border/80 shadow-sm">
+                <CardHeader className="border-b bg-muted/30">
+                  <CardTitle className="text-lg">Datos de la inspección</CardTitle>
+                  <CardDescription>Los campos marcados con * son obligatorios.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 pt-6">
                   <div className="space-y-2">
-                    <Label htmlFor="lugar">Lugar a Inspeccionar *</Label>
+                    <Label htmlFor="lugar" className="flex items-center gap-2"><MapPin className="size-4 text-primary" aria-hidden="true" />Lugar a inspeccionar *</Label>
                     <Input
                       id="lugar"
                       placeholder="Ej: Almacén Principal"
@@ -742,7 +766,7 @@ export default function InspeccionRapidaPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="inspector">Inspector *</Label>
+                    <Label htmlFor="inspector" className="flex items-center gap-2"><UserRound className="size-4 text-primary" aria-hidden="true" />Inspector *</Label>
                     <Input
                       id="inspector"
                       placeholder="Nombre del inspector"
@@ -768,7 +792,7 @@ export default function InspeccionRapidaPage() {
               {/* Botón Siguiente */}
               <div className="flex gap-3">
                 <Link href="/" className="flex-1">
-                  <Button variant="outline" size="lg" className="w-full h-12 text-base">
+                  <Button variant="outline" size="lg" className="h-12 w-full rounded-xl text-base">
                     Cancelar
                   </Button>
                 </Link>
@@ -785,19 +809,23 @@ export default function InspeccionRapidaPage() {
                     setCurrentStep(2)
                   }}
                   size="lg"
-                  className="flex-1 h-12 text-base"
+                  className="flex-1 h-12 rounded-xl text-base"
                 >
                   Siguiente
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-2 size-5" aria-hidden="true" />
                 </Button>
               </div>
             </div>
           ) : (
             // PANTALLA 2: Captura de Fotos y Clasificación
             <div className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">Captura de Fotos</h1>
-                <p className="text-muted-foreground">Fotografía fotos y clasifícalas como hallazgos o evidencias</p>
+              <div className="flex items-start gap-4">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Camera aria-hidden="true" /></span>
+                <div>
+                  <p className="text-sm font-semibold text-primary">PASO 2 · FOTOS Y CIERRE</p>
+                  <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground md:text-3xl">Captura de fotos</h1>
+                  <p className="mt-1 text-muted-foreground">Clasifica cada foto como hallazgo o evidencia y agrega una descripción.</p>
+                </div>
               </div>
 
               {/* Botón Tomar Foto Grande */}
@@ -809,14 +837,26 @@ export default function InspeccionRapidaPage() {
                 className="hidden"
                 id="photo-input"
               />
-              <label htmlFor="photo-input" className="block">
-                <Button asChild size="lg" className="w-full h-16 text-lg" >
+              <label htmlFor="photo-input" className="block cursor-pointer">
+                <Button asChild size="lg" className="h-14 w-full rounded-xl text-base font-semibold shadow-sm">
                   <span>
-                    <Camera className="mr-3 h-6 w-6" />
-                    Tomar Foto
+                    <Camera className="mr-2 size-5" aria-hidden="true" />
+                    Tomar una foto
                   </span>
                 </Button>
               </label>
+
+              {photos.length === 0 && (
+                <Card className="border-dashed border-primary/30 bg-primary/[0.03]">
+                  <CardContent className="flex items-center gap-4 py-5">
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><ImagePlus aria-hidden="true" /></span>
+                    <div>
+                      <p className="font-medium">Aún no hay fotos</p>
+                      <p className="text-sm text-muted-foreground">Toma una foto para agregarla como hallazgo o evidencia.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Galería de Fotos Agrupadas */}
               {photos.length > 0 && (
@@ -965,40 +1005,40 @@ export default function InspeccionRapidaPage() {
               )}
 
   {/* Botones finales */}
-  <div className="flex gap-3">
-  <Button
-  onClick={() => {
-    if (photos.length > 0) {
-      setShowDiscardConfirm(true)
-    } else {
-      setCurrentStep(1)
-    }
-  }}
-  variant="outline"
-  size="lg"
-  className="flex-1 h-12 text-base"
-  >
-  <ArrowLeft className="mr-2 h-5 w-5" />
-  Volver
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  onClick={() => {
+                    if (photos.length > 0) {
+                      setShowDiscardConfirm(true)
+                    } else {
+                      setCurrentStep(1)
+                    }
+                  }}
+                  variant="outline"
+                  size="lg"
+                  className="h-12 flex-1 rounded-xl text-base"
+                >
+                  <ArrowLeft className="mr-2 size-5" aria-hidden="true" />
+                  Volver
                 </Button>
                 <Button
                   onClick={() => setShowZipConfirm(true)}
                   disabled={photos.length === 0 || isDownloadingZip}
                   variant="outline"
                   size="lg"
-                  className="flex-1 h-12 text-base"
+                  className="h-12 flex-1 rounded-xl text-base"
                 >
-                  {isDownloadingZip ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Download className="mr-2 h-5 w-5" />}
-                  ZIP
+                  {isDownloadingZip ? <Loader2 className="mr-2 size-5 animate-spin" aria-hidden="true" /> : <Download className="mr-2 size-5" aria-hidden="true" />}
+                  Descargar ZIP
                 </Button>
                 <Button
                   onClick={() => setShowPDFConfirm(true)}
                   disabled={photos.length === 0 || isGeneratingPDF}
                   size="lg"
-                  className="flex-1 h-12 text-base"
+                  className="h-12 flex-1 rounded-xl text-base"
                 >
-                  {isGeneratingPDF ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <FileText className="mr-2 h-5 w-5" />}
-                  PDF
+                  {isGeneratingPDF ? <Loader2 className="mr-2 size-5 animate-spin" aria-hidden="true" /> : <FileText className="mr-2 size-5" aria-hidden="true" />}
+                  Terminar y generar PDF
                 </Button>
               </div>
             </div>
@@ -1089,11 +1129,11 @@ export default function InspeccionRapidaPage() {
                 addPhotoWithClassification("hallazgo")
               }}
               variant="outline"
-              className="h-24 flex flex-col items-center justify-center border-2 border-red-300 hover:bg-red-50"
+              className="h-24 flex flex-col items-center justify-center rounded-xl border-2 border-destructive/30 bg-destructive/5 hover:bg-destructive/10"
             >
-              <div className="text-2xl mb-2">🔴</div>
-              <div className="text-sm font-semibold text-red-700">HALLAZGO</div>
-              <div className="text-xs text-red-600">No conforme</div>
+              <AlertTriangle className="mb-2 size-6 text-destructive" aria-hidden="true" />
+              <span className="text-sm font-semibold text-destructive">HALLAZGO</span>
+              <span className="text-xs text-muted-foreground">No conforme</span>
             </Button>
 
             <Button
@@ -1102,11 +1142,11 @@ export default function InspeccionRapidaPage() {
                 addPhotoWithClassification("evidencia")
               }}
               variant="outline"
-              className="h-24 flex flex-col items-center justify-center border-2 border-green-300 hover:bg-green-50"
+              className="h-24 flex flex-col items-center justify-center rounded-xl border-2 border-primary/30 bg-primary/5 hover:bg-primary/10"
             >
-              <div className="text-2xl mb-2">🟢</div>
-              <div className="text-sm font-semibold text-green-700">EVIDENCIA</div>
-              <div className="text-xs text-green-600">Conforme</div>
+              <CheckCircle2 className="mb-2 size-6 text-primary" aria-hidden="true" />
+              <span className="text-sm font-semibold text-primary">EVIDENCIA</span>
+              <span className="text-xs text-muted-foreground">Conforme</span>
             </Button>
           </div>
 
@@ -1160,10 +1200,7 @@ export default function InspeccionRapidaPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Continuar editando</AlertDialogCancel>
             <Button
-              onClick={() => {
-                setShowDiscardConfirm(false)
-                setCurrentStep(1)
-              }}
+              onClick={() => void resetQuickInspection()}
               variant="destructive"
             >
               Descartar y volver
