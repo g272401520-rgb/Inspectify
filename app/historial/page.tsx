@@ -325,7 +325,7 @@ export default function HistorialPage() {
                                           <div>
                                             <span className="text-muted-foreground">Hallazgos:</span>
                                             <span className="ml-2 text-foreground font-medium">
-                                              {inspection.findings.length}
+                                              {inspection.findings.filter((finding) => finding.status === "no-conforme").length}
                                             </span>
                                           </div>
                                         </div>

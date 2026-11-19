@@ -215,6 +215,7 @@ export default function ResultsPage() {
   }
 
   const stats = calculateInspectionStats(safeInspection, safeChecklist)
+  const reportedFindings = safeInspection.findings.filter((finding) => finding.status === "no-conforme")
 
   const compliancePercentage =
     stats.totalCriteria > 0 ? ((stats.totalCriteria - stats.totalFindings) / stats.totalCriteria) * 100 : 100
@@ -1178,14 +1179,14 @@ export default function ResultsPage() {
           )}
 
           {/* Hallazgos y fotografías */}
-          {!isRegistroChecklist && inspection.findings.length > 0 && (
+          {!isRegistroChecklist && reportedFindings.length > 0 && (
             <Card className="mb-6 md:mb-8">
               <CardHeader className="px-4 md:px-6">
                 <CardTitle className="text-base md:text-lg">Hallazgos y fotografías</CardTitle>
-                <CardDescription>Detalle completo de los hallazgos registrados en esta inspección</CardDescription>
+                <CardDescription>Detalle completo de los hallazgos no conformes registrados en esta inspección</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 px-4 md:px-6">
-                {inspection.findings.map((finding, index) => (
+                {reportedFindings.map((finding, index) => (
                   <div key={finding.id || `finding-${index}`} className="rounded-lg border border-border p-4 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <h3 className="font-semibold text-foreground">Hallazgo {index + 1}</h3>

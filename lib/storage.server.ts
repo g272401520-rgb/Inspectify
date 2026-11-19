@@ -1,6 +1,6 @@
 "use server"
 
-import type { Area, Checklist, Inspection } from "./types"
+import type { Area, Checklist, Finding, Inspection } from "./types"
 import { createClient } from "./supabase/server"
 import { logger } from "./logger"
 
@@ -466,10 +466,12 @@ export async function getInspections(): Promise<Inspection[]> {
   const supabase = await getSupabaseOrNull()
   if (!supabase) return []
 
-  // Fetch inspections without nested data for better performance
   const { data: inspectionsData, error: inspectionsError } = await supabase
     .from("inspections")
-    .select("*")
+    .select(`
+      *,
+      findings (id, item_id, status)
+    `)
     .order("date", { ascending: false })
     .limit(500) // Limit to most recent 500 inspections
 
@@ -478,44 +480,25 @@ export async function getInspections(): Promise<Inspection[]> {
     return []
   }
 
-  // Fetch findings count for each inspection in a single query
-  const inspectionIds = inspectionsData?.map((i) => i.id) || []
-  const { data: findingsData } = await supabase
-    .from("findings")
-    .select("inspection_id, id")
-    .in("inspection_id", inspectionIds)
-
-  // Group findings by inspection_id
-  const findingsByInspection = (findingsData || []).reduce((acc: Record<string, number>, finding: any) => {
-    acc[finding.inspection_id] = (acc[finding.inspection_id] || 0) + 1
-    return acc
-  }, {})
-
-  return (inspectionsData || []).map((inspection: any) => {
-    const findingCount = findingsByInspection[inspection.id] || 0
-    // Create dummy findings with correct count for display purposes
-    const dummyFindings = Array.from({ length: findingCount }, (_, i) => ({
-      id: `dummy-${i}`,
-      itemId: `dummy-${i}`,
+  return (inspectionsData || []).map((inspection: any) => ({
+    id: inspection.id,
+    areaId: inspection.area_id,
+    checklistId: inspection.checklist_id,
+    date: inspection.date,
+    inspectorName: inspection.inspector_name,
+    status: inspection.status as "en-progreso" | "completada",
+    findings: (inspection.findings || []).map((finding: any) => ({
+      id: finding.id,
+      itemId: finding.item_id,
       description: "",
-      status: "pendiente" as const,
+      status: finding.status as Finding["status"],
       correctiveAction: "",
       dueDate: "",
       closedDate: "",
       photos: [],
       solutionPhotos: [],
-    }))
-    
-    return {
-      id: inspection.id,
-      areaId: inspection.area_id,
-      checklistId: inspection.checklist_id,
-      date: inspection.date,
-      inspectorName: inspection.inspector_name,
-      status: inspection.status as "en-progreso" | "completada",
-      findings: dummyFindings,
-    }
-  })
+    })),
+  }))
 }
 
 export async function getInspectionsByArea(areaId: string): Promise<Inspection[]> {
