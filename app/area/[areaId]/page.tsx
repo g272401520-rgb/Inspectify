@@ -395,10 +395,10 @@ export default function AreaPage() {
         ) : (
           <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {getSortedChecklists().map((checklist) => (
-              <Card key={checklist.id} className="group hover:border-primary transition-colors relative">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <CardTitle className="text-base md:text-lg truncate min-w-0 flex-1">{checklist.name}</CardTitle>
+              <Card key={checklist.id} className="group relative min-w-0 transition-colors hover:border-primary">
+                <CardHeader className="min-w-0 pb-3">
+                  <div className="mb-2 flex min-w-0 items-start justify-between gap-2">
+                    <CardTitle className="min-w-0 flex-1 whitespace-normal break-words text-base leading-snug md:text-lg [overflow-wrap:anywhere]">{checklist.name}</CardTitle>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {checklist.type === "registro" && (
                         <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded whitespace-nowrap">
